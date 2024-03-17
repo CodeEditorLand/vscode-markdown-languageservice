@@ -1,7 +1,28 @@
 {
-  "author": "Microsoft Corporation",
+  "name": "vscode-markdown-languageservice",
+  "version": "0.5.0-alpha.1",
+  "description": "Markdown language service",
   "bugs": {
     "url": "https://github.com/microsoft/vscode-markdown-languageservice/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/vscode-markdown-languageservice.git"
+  },
+  "license": "MIT",
+  "author": "Microsoft Corporation",
+  "main": "./out/index.js",
+  "types": "./types/vscode-markdown-languageservice.d.ts",
+  "files": [
+    "out/**/*.js",
+    "!out/test/*.js",
+    "types/vscode-markdown-languageservice.d.ts"
+  ],
+  "scripts": {
+    "api-extractor": "mkdirp etc && npx api-extractor run --local",
+    "compile": "tsc -b tsconfig.json",
+    "prepublishOnly": "npm run compile && npm run api-extractor",
+    "watch": "tsc -b tsconfig.json --watch"
   },
   "dependencies": {
     "@vscode/l10n": "0.0.10",
@@ -10,7 +31,6 @@
     "vscode-languageserver-protocol": "3.17.1",
     "vscode-uri": "3.0.7"
   },
-  "description": "Markdown language service",
   "devDependencies": {
     "@microsoft/api-extractor": "7.31.2",
     "@types/markdown-it": "12.2.3",
@@ -22,25 +42,5 @@
     "mocha": "10.0.0",
     "typescript": "5.4.2",
     "vscode-languageserver-textdocument": "1.0.8"
-  },
-  "files": [
-    "out/**/*.js",
-    "!out/test/*.js",
-    "types/vscode-markdown-languageservice.d.ts"
-  ],
-  "license": "MIT",
-  "main": "./out/index.js",
-  "name": "vscode-markdown-languageservice",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/microsoft/vscode-markdown-languageservice.git"
-  },
-  "scripts": {
-    "api-extractor": "mkdirp etc && npx api-extractor run --local",
-    "compile": "tsc -b tsconfig.json",
-    "prepublishOnly": "npm run compile && npm run api-extractor",
-    "watch": "tsc -b tsconfig.json --watch"
-  },
-  "types": "./types/vscode-markdown-languageservice.d.ts",
-  "version": "0.5.0-alpha.1"
+  }
 }
