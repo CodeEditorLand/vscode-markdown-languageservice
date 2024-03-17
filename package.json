@@ -1,12 +1,16 @@
 {
   "name": "vscode-markdown-languageservice",
-  "description": "Markdown language service",
   "version": "0.5.0-alpha.1",
-  "author": "Microsoft Corporation",
-  "license": "MIT",
-  "engines": {
-    "node": "*"
+  "description": "Markdown language service",
+  "bugs": {
+    "url": "https://github.com/microsoft/vscode-markdown-languageservice/issues"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/vscode-markdown-languageservice.git"
+  },
+  "license": "MIT",
+  "author": "Microsoft Corporation",
   "main": "./out/index.js",
   "types": "./types/vscode-markdown-languageservice.d.ts",
   "files": [
@@ -14,6 +18,12 @@
     "!out/test/*.js",
     "types/vscode-markdown-languageservice.d.ts"
   ],
+  "scripts": {
+    "api-extractor": "mkdirp etc && npx api-extractor run --local",
+    "compile": "tsc -b tsconfig.json",
+    "prepublishOnly": "npm run compile && npm run api-extractor",
+    "watch": "tsc -b tsconfig.json --watch"
+  },
   "dependencies": {
     "@vscode/l10n": "^0.0.10",
     "node-html-parser": "^6.1.5",
@@ -27,28 +37,10 @@
     "@types/mocha": "^9.1.1",
     "@types/node": "18.x",
     "@types/picomatch": "^2.3.0",
-    "@typescript-eslint/eslint-plugin": "^7.2.0",
-    "@typescript-eslint/parser": "^7.2.0",
-    "eslint": "^8.57.0",
     "markdown-it": "^13.0.1",
     "mkdirp": "^1.0.4",
     "mocha": "^10.0.0",
     "typescript": "^5.4.2",
     "vscode-languageserver-textdocument": "^1.0.8"
-  },
-  "scripts": {
-    "api-extractor": "mkdirp etc && npx api-extractor run --local",
-    "compile": "tsc -b tsconfig.json",
-    "watch": "tsc -b tsconfig.json --watch",
-    "lint": "eslint \"src/**/*.ts\"",
-    "prepublishOnly": "npm run compile && npm run api-extractor",
-    "test": "mocha 'out/test/**/*.test.js' --ui=tdd --timeout=2000 --exit"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/microsoft/vscode-markdown-languageservice.git"
-  },
-  "bugs": {
-    "url": "https://github.com/microsoft/vscode-markdown-languageservice/issues"
   }
 }
