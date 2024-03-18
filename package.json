@@ -1,16 +1,12 @@
 {
   "name": "vscode-markdown-languageservice",
-  "version": "0.5.0-alpha.1",
   "description": "Markdown language service",
-  "bugs": {
-    "url": "https://github.com/microsoft/vscode-markdown-languageservice/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/microsoft/vscode-markdown-languageservice.git"
-  },
-  "license": "MIT",
+  "version": "0.5.0-alpha.1",
   "author": "Microsoft Corporation",
+  "license": "MIT",
+  "engines": {
+    "node": "*"
+  },
   "main": "./out/index.js",
   "types": "./types/vscode-markdown-languageservice.d.ts",
   "files": [
@@ -18,29 +14,41 @@
     "!out/test/*.js",
     "types/vscode-markdown-languageservice.d.ts"
   ],
+  "dependencies": {
+    "@vscode/l10n": "^0.0.10",
+    "node-html-parser": "^6.1.5",
+    "picomatch": "^2.3.1",
+    "vscode-languageserver-protocol": "^3.17.1",
+    "vscode-uri": "^3.0.7"
+  },
+  "devDependencies": {
+    "@microsoft/api-extractor": "^7.31.2",
+    "@types/markdown-it": "^12.2.3",
+    "@types/mocha": "^9.1.1",
+    "@types/node": "18.x",
+    "@types/picomatch": "^2.3.0",
+    "@typescript-eslint/eslint-plugin": "^7.2.0",
+    "@typescript-eslint/parser": "^7.2.0",
+    "eslint": "^8.57.0",
+    "markdown-it": "^13.0.1",
+    "mkdirp": "^1.0.4",
+    "mocha": "^10.0.0",
+    "typescript": "^5.4.2",
+    "vscode-languageserver-textdocument": "^1.0.8"
+  },
   "scripts": {
     "api-extractor": "mkdirp etc && npx api-extractor run --local",
     "compile": "tsc -b tsconfig.json",
+    "watch": "tsc -b tsconfig.json --watch",
+    "lint": "eslint \"src/**/*.ts\"",
     "prepublishOnly": "npm run compile && npm run api-extractor",
-    "watch": "tsc -b tsconfig.json --watch"
+    "test": "mocha 'out/test/**/*.test.js' --ui=tdd --timeout=2000 --exit"
   },
-  "dependencies": {
-    "@vscode/l10n": "0.0.10",
-    "node-html-parser": "6.1.5",
-    "picomatch": "2.3.1",
-    "vscode-languageserver-protocol": "3.17.1",
-    "vscode-uri": "3.0.7"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/vscode-markdown-languageservice.git"
   },
-  "devDependencies": {
-    "@microsoft/api-extractor": "7.31.2",
-    "@types/markdown-it": "12.2.3",
-    "@types/mocha": "9.1.1",
-    "@types/node": "18.x",
-    "@types/picomatch": "2.3.0",
-    "markdown-it": "13.0.1",
-    "mkdirp": "1.0.4",
-    "mocha": "10.0.0",
-    "typescript": "5.4.2",
-    "vscode-languageserver-textdocument": "1.0.8"
+  "bugs": {
+    "url": "https://github.com/microsoft/vscode-markdown-languageservice/issues"
   }
 }
