@@ -1,54 +1,57 @@
 {
-  "name": "vscode-markdown-languageservice",
-  "description": "Markdown language service",
-  "version": "0.5.0-alpha.1",
-  "author": "Microsoft Corporation",
-  "license": "MIT",
-  "engines": {
-    "node": "*"
-  },
-  "main": "./out/index.js",
-  "types": "./types/vscode-markdown-languageservice.d.ts",
-  "files": [
-    "out/**/*.js",
-    "!out/test/*.js",
-    "types/vscode-markdown-languageservice.d.ts"
-  ],
-  "dependencies": {
-    "@vscode/l10n": "0.0.18",
-    "node-html-parser": "6.1.12",
-    "picomatch": "4.0.1",
-    "vscode-languageserver-protocol": "3.17.5",
-    "vscode-uri": "3.0.8"
-  },
-  "devDependencies": {
-    "@microsoft/api-extractor": "7.43.0",
-    "@types/markdown-it": "13.0.7",
-    "@types/mocha": "10.0.6",
-    "@types/node": "20.x",
-    "@types/picomatch": "2.3.3",
-    "@typescript-eslint/eslint-plugin": "7.3.1",
-    "@typescript-eslint/parser": "7.3.1",
-    "eslint": "8.57.0",
-    "markdown-it": "14.1.0",
-    "mkdirp": "3.0.1",
-    "mocha": "10.3.0",
-    "typescript": "5.4.2",
-    "vscode-languageserver-textdocument": "1.0.11"
-  },
-  "scripts": {
-    "api-extractor": "mkdirp etc && npx api-extractor run --local",
-    "compile": "tsc -b tsconfig.json",
-    "watch": "tsc -b tsconfig.json --watch",
-    "lint": "eslint \"src/**/*.ts\"",
-    "prepublishOnly": "npm run compile && npm run api-extractor",
-    "test": "mocha 'out/test/**/*.test.js' --ui=tdd --timeout=2000 --exit"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/microsoft/vscode-markdown-languageservice.git"
-  },
-  "bugs": {
-    "url": "https://github.com/microsoft/vscode-markdown-languageservice/issues"
-  }
+	"name": "vscode-markdown-languageservice",
+	"version": "0.0.1",
+	"private": false,
+	"description": "Markdown language service",
+	"homepage": "https://github.com/CodeEditorLand/Foundation#readme",
+	"bugs": {
+		"url": "https://github.com/CodeEditorLand/Foundation/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/CodeEditorLand/Foundation.git"
+	},
+	"license": "SEE LICENSE IN LICENSE",
+	"author": {
+		"name": "Playform",
+		"email": "Hello@Playform.Cloud",
+		"url": "https://playform.cloud"
+	},
+	"type": "module",
+	"main": "./out/index.js",
+	"types": "./types/vscode-markdown-languageservice.d.ts",
+	"files": [
+		"out/**/*.js",
+		"!out/test/*.js",
+		"types/vscode-markdown-languageservice.d.ts"
+	],
+	"scripts": {
+		"api-extractor": "mkdirp etc && npx api-extractor run --local",
+		"compile": "tsc -b tsconfig.json",
+		"prepublishOnly": "TypeScriptESBuild 'Source/**/*.ts'",
+		"watch": "tsc -b tsconfig.json --watch"
+	},
+	"dependencies": {
+		"@vscode/l10n": "0.0.18",
+		"node-html-parser": "6.1.12",
+		"picomatch": "4.0.1",
+		"vscode-languageserver-protocol": "3.17.5",
+		"vscode-uri": "3.0.8"
+	},
+	"devDependencies": {
+		"@microsoft/api-extractor": "7.43.0",
+		"@types/markdown-it": "13.0.7",
+		"@types/mocha": "10.0.6",
+		"@types/node": "20.x",
+		"@types/picomatch": "2.3.3",
+		"markdown-it": "14.1.0",
+		"mkdirp": "3.0.1",
+		"mocha": "10.3.0",
+		"typescript": "5.4.2",
+		"typescript-esbuild": "latest",
+		"vscode-languageserver-textdocument": "1.0.11"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
 }
