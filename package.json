@@ -1,43 +1,17 @@
 {
-	"name": "vscode-markdown-languageservice",
-	"version": "0.0.1",
-	"private": false,
-	"description": "Markdown language service",
-	"keywords": [
-		"land"
-	],
-	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/LandMarkdownLanguageService#readme",
-	"bugs": {
-		"url": "HTTPS://GitHub.Com/CodeEditorLand/LandMarkdownLanguageService/issues"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+HTTPS://github.com/CodeEditorLand/LandMarkdownLanguageService.git"
-	},
-	"license": "SEE LICENSE IN LICENSE",
 	"author": {
-		"name": "🌆 — Land —",
 		"email": "Land@PlayForm.Cloud",
+		"name": "🌆 — Land —",
 		"url": "HTTPS://Land.PlayForm.Cloud"
 	},
-	"type": "module",
-	"main": "./out/index.js",
-	"types": "./types/vscode-markdown-languageservice.d.ts",
-	"files": [
-		"out/**/*.js",
-		"!out/test/**/*.js",
-		"types/vscode-markdown-languageservice.d.ts"
-	],
-	"scripts": {
-		"Document": "Document 'Source/**/*.ts'",
-		"api-extractor": "mkdirp etc && npx api-extractor run --local",
-		"compile": "tsc -b tsconfig.json",
-		"prepublishOnly": "Build 'Source/**/*.ts'"
+	"bugs": {
+		"url": "HTTPS://GitHub.Com/CodeEditorLand/LandMarkdownLanguageService/issues"
 	},
 	"dependencies": {
 		"node-html-parser": "6.1.13",
 		"picomatch": "4.0.2"
 	},
+	"description": "Markdown language service",
 	"devDependencies": {
 		"@playform/build": "0.0.7",
 		"@playform/document": "0.0.6",
@@ -49,7 +23,33 @@
 		"mkdirp": "3.0.1",
 		"source-map-support": "0.5.21"
 	},
+	"files": [
+		"out/**/*.js",
+		"!out/test/**/*.js",
+		"types/vscode-markdown-languageservice.d.ts"
+	],
+	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/LandMarkdownLanguageService#readme",
+	"keywords": [
+		"land"
+	],
+	"license": "SEE LICENSE IN LICENSE",
+	"main": "./out/index.js",
+	"name": "vscode-markdown-languageservice",
+	"private": false,
 	"publishConfig": {
 		"access": "public"
-	}
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+HTTPS://github.com/CodeEditorLand/LandMarkdownLanguageService.git"
+	},
+	"scripts": {
+		"Document": "Document 'Source/**/*.ts'",
+		"api-extractor": "mkdirp etc && npx api-extractor run --local",
+		"compile": "tsc -b tsconfig.json",
+		"prepublishOnly": "Build 'Source/**/*.ts'"
+	},
+	"type": "module",
+	"types": "./types/vscode-markdown-languageservice.d.ts",
+	"version": "0.0.1"
 }
