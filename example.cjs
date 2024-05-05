@@ -51,7 +51,7 @@ const workspace = new class {
 		return [myDocument];
 	}
 
-	hasMarkdownDocument(resource) {
+	hasMarkdownDocument(/** @type {URI} */ resource) {
 		return resource.toString() === myDocument.uri;
 	}
 
@@ -64,7 +64,7 @@ const workspace = new class {
 	}
 
 	/** @returns {Promise<mdls.FileStat | undefined>} */
-	async stat(resource) {
+	async stat(/** @type {URI} */ resource) {
 		if (resource.toString() === myDocument.uri) {
 			return {};
 		}

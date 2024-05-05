@@ -7,11 +7,13 @@ import * as lsp from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
 import { LsConfiguration } from '../config';
 import { MdTableOfContentsProvider, TableOfContents, TocEntry } from '../tableOfContents';
+import { HrefKind, InternalHref, MdLink, MdLinkKind } from '../types/documentLink';
 import { translatePosition } from '../types/position';
 import { modifyRange, rangeContains } from '../types/range';
-import { ITextDocument } from '../types/textDocument';
+import { getDocUri, ITextDocument } from '../types/textDocument';
+import { isSameResource, looksLikePathToResource } from '../util/path';
 import { tryAppendMarkdownFileExtension } from '../workspace';
-import { HrefKind, InternalHref, looksLikeLinkToResource, MdLink, MdLinkKind, MdLinkProvider } from './documentLinks';
+import { MdLinkProvider } from './documentLinks';
 import { getFilePathRange } from './rename';
 
 export class MdDocumentHighlightProvider {
@@ -52,12 +54,12 @@ export class MdDocumentHighlightProvider {
 	*#getHighlightsForHeader(document: ITextDocument, header: TocEntry, links: readonly MdLink[], toc: TableOfContents): Iterable<lsp.DocumentHighlight> {
 		yield { range: header.headerLocation.range, kind: lsp.DocumentHighlightKind.Write };
 
-		const docUri = document.uri.toString();
+		const docUri = getDocUri(document);
 		for (const link of links) {
 			if (link.href.kind === HrefKind.Internal
 				&& toc.lookup(link.href.fragment) === header
 				&& link.source.fragmentRange
-				&& link.href.path.toString() === docUri
+				&& isSameResource(link.href.path, docUri)
 			) {
 				yield {
 					range: modifyRange(link.source.fragmentRange, translatePosition(link.source.fragmentRange.start, { characterDelta: -1 })),
@@ -103,7 +105,7 @@ export class MdDocumentHighlightProvider {
 
 		const fragment = href.fragment.toLowerCase();
 
-		if (targetDoc.toString() === document.uri) {
+		if (isSameResource(targetDoc, getDocUri(document))) {
 			const header = toc.lookup(fragment);
 			if (header) {
 				yield { range: header.headerLocation.range, kind: lsp.DocumentHighlightKind.Write };
@@ -111,7 +113,7 @@ export class MdDocumentHighlightProvider {
 		}
 
 		for (const link of links) {
-			if (link.href.kind === HrefKind.Internal && looksLikeLinkToResource(this.#configuration, link.href, targetDoc)) {
+			if (link.href.kind === HrefKind.Internal && looksLikePathToResource(this.#configuration, link.href.path, targetDoc)) {
 				if (link.source.fragmentRange && link.href.fragment.toLowerCase() === fragment) {
 					yield {
 						range: modifyRange(link.source.fragmentRange, translatePosition(link.source.fragmentRange.start, { characterDelta: -1 })),
@@ -125,7 +127,7 @@ export class MdDocumentHighlightProvider {
 	*#getHighlightsForLinkPath(path: URI, links: readonly MdLink[]): Iterable<lsp.DocumentHighlight> {
 		const targetDoc = tryAppendMarkdownFileExtension(this.#configuration, path) ?? path;
 		for (const link of links) {
-			if (link.href.kind === HrefKind.Internal && looksLikeLinkToResource(this.#configuration, link.href, targetDoc)) {
+			if (link.href.kind === HrefKind.Internal && looksLikePathToResource(this.#configuration, link.href.path, targetDoc)) {
 				yield {
 					range: getFilePathRange(link),
 					kind: lsp.DocumentHighlightKind.Read,
@@ -136,7 +138,7 @@ export class MdDocumentHighlightProvider {
 
 	*#getHighlightsForExternalLink(uri: URI, links: readonly MdLink[]): Iterable<lsp.DocumentHighlight> {
 		for (const link of links) {
-			if (link.href.kind === HrefKind.External && link.href.uri.toString() === uri.toString()) {
+			if (link.href.kind === HrefKind.External && isSameResource(link.href.uri, uri)) {
 				yield {
 					range: getFilePathRange(link),
 					kind: lsp.DocumentHighlightKind.Read,

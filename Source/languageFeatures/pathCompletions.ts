@@ -12,16 +12,17 @@ import { LsConfiguration, isExcludedPath } from '../config';
 import { IMdParser } from '../parser';
 import { MdTableOfContentsProvider, TableOfContents, TocEntry } from '../tableOfContents';
 import { translatePosition } from '../types/position';
-import { makeRange } from '../types/range';
 import { ITextDocument, getDocUri, getLine } from '../types/textDocument';
-import { looksLikeMarkdownFilePath } from '../util/file';
-import { computeRelativePath } from '../util/path';
+import { htmlTagPathAttrs } from '../util/html';
+import * as mdBuilder from '../util/mdBuilder';
+import { escapeForAngleBracketLink, hasBalancedParens } from '../util/mdLinks';
+import { MediaType, getMediaPreviewType } from '../util/media';
+import { computeRelativePath, isSameResource, looksLikeMarkdownFilePath } from '../util/path';
 import { Schemes } from '../util/schemes';
 import { r } from '../util/string';
 import { FileStat, IWorkspace, getWorkspaceFolder, openLinkToMarkdownFile } from '../workspace';
 import { MdWorkspaceInfoCache } from '../workspaceCache';
-import { MdLinkProvider, htmlTagPathAttrs } from './documentLinks';
-import { escapeForAngleBracketLink, hasBalancedParens } from '../util/mdLinks';
+import { MdLinkProvider } from './documentLinks';
 
 enum CompletionContextKind {
 	/** `[...](|)` */
@@ -191,7 +192,7 @@ export class MdPathCompletionProvider {
 					(context.linkPrefix.startsWith('#') && options.includeWorkspaceHeaderCompletions === IncludeWorkspaceHeaderCompletions.onSingleOrDoubleHash) ||
 					(context.linkPrefix.startsWith('##') && (options.includeWorkspaceHeaderCompletions === IncludeWorkspaceHeaderCompletions.onDoubleHash || options.includeWorkspaceHeaderCompletions === IncludeWorkspaceHeaderCompletions.onSingleOrDoubleHash))
 				) {
-					const insertRange = makeRange(context.linkTextStartPosition, position);
+					const insertRange = lsp.Range.create(context.linkTextStartPosition, position);
 					yield* this.#provideWorkspaceHeaderSuggestions(document, position, context, insertRange, token);
 					return;
 				}
@@ -200,7 +201,7 @@ export class MdPathCompletionProvider {
 
 				// Add anchor #links in current doc
 				if (context.linkPrefix.length === 0 || isAnchorInCurrentDoc) {
-					const insertRange = makeRange(context.linkTextStartPosition, position);
+					const insertRange = lsp.Range.create(context.linkTextStartPosition, position);
 					yield* this.#provideHeaderSuggestions(document, position, context, insertRange, token);
 				}
 
@@ -219,7 +220,7 @@ export class MdPathCompletionProvider {
 
 							if (otherDoc) {
 								const anchorStartPosition = translatePosition(position, { characterDelta: -(context.anchorInfo.anchorPrefix.length + 1) });
-								const range = makeRange(anchorStartPosition, position);
+								const range = lsp.Range.create(anchorStartPosition, position);
 								yield* this.#provideHeaderSuggestions(otherDoc, position, context, range, token);
 							}
 						}
@@ -347,8 +348,8 @@ export class MdPathCompletionProvider {
 	}
 
 	async *#provideReferenceSuggestions(document: ITextDocument, position: lsp.Position, context: PathCompletionContext, token: CancellationToken): AsyncIterable<lsp.CompletionItem> {
-		const insertionRange = makeRange(context.linkTextStartPosition, position);
-		const replacementRange = makeRange(insertionRange.start, translatePosition(position, { characterDelta: context.linkSuffix.length }));
+		const insertionRange = lsp.Range.create(context.linkTextStartPosition, position);
+		const replacementRange = lsp.Range.create(insertionRange.start, translatePosition(position, { characterDelta: context.linkSuffix.length }));
 
 		const { definitions } = await this.#linkProvider.getLinks(document);
 		if (token.isCancellationRequested) {
@@ -375,7 +376,7 @@ export class MdPathCompletionProvider {
 			return;
 		}
 
-		const replacementRange = makeRange(insertionRange.start, translatePosition(position, { characterDelta: context.linkSuffix.length }));
+		const replacementRange = lsp.Range.create(insertionRange.start, translatePosition(position, { characterDelta: context.linkSuffix.length }));
 		for (const entry of toc.entries) {
 			const completionItem = this.#createHeaderCompletion(entry, insertionRange, replacementRange);
 			completionItem.labelDetails = {
@@ -413,9 +414,9 @@ export class MdPathCompletionProvider {
 			return;
 		}
 
-		const replacementRange = makeRange(insertionRange.start, translatePosition(position, { characterDelta: context.linkSuffix.length }));
+		const replacementRange = lsp.Range.create(insertionRange.start, translatePosition(position, { characterDelta: context.linkSuffix.length }));
 		for (const [toDoc, toc] of tocs) {
-			const isHeaderInCurrentDocument = toDoc.toString() === getDocUri(document).toString();
+			const isHeaderInCurrentDocument = isSameResource(toDoc, getDocUri(document));
 
 			const rawPath = isHeaderInCurrentDocument ? '' : computeRelativePath(getDocUri(document), toDoc);
 			if (typeof rawPath === 'undefined') {
@@ -449,10 +450,10 @@ export class MdPathCompletionProvider {
 		}
 
 		const pathSegmentStart = translatePosition(position, { characterDelta: valueBeforeLastSlash.length - context.linkPrefix.length });
-		const insertRange = makeRange(pathSegmentStart, position);
+		const insertRange = lsp.Range.create(pathSegmentStart, position);
 
 		const pathSegmentEnd = translatePosition(position, { characterDelta: context.linkSuffix.length });
-		const replacementRange = makeRange(pathSegmentStart, pathSegmentEnd);
+		const replacementRange = lsp.Range.create(pathSegmentStart, pathSegmentEnd);
 
 		let dirInfo: Iterable<readonly [string, FileStat]>;
 		try {
@@ -483,7 +484,7 @@ export class MdPathCompletionProvider {
 				label,
 				kind: isDir ? lsp.CompletionItemKind.Folder : lsp.CompletionItemKind.File,
 				detail: l10n.t(`Link to '{0}'`, label),
-				documentation: isDir ? uri.path + '/' : uri.path,
+				documentation: this.#getPathDocumentation(uri, type),
 				textEdit: {
 					newText,
 					insert: insertRange,
@@ -492,6 +493,31 @@ export class MdPathCompletionProvider {
 				command: isDir ? { command: 'editor.action.triggerSuggest', title: '' } : undefined,
 			};
 		}
+	}
+
+	#getPathDocumentation(uri: URI, stat: FileStat): lsp.MarkupContent {
+		let documentation = stat.isDirectory
+			? mdBuilder.inlineCode(uri.path + '/') // TODO: support links to folders too
+			: mdBuilder.codeLink(uri.path, uri);
+
+		if (!stat.isDirectory) {
+			const maxMediaWidth = 300;
+			switch (getMediaPreviewType(uri)) {
+				case MediaType.Image: {
+					documentation += `\n\n${mdBuilder.imageLink(uri, 'Linked image', maxMediaWidth)}`;
+					break;
+				}
+				case MediaType.Video: {
+					documentation += `\n\n${mdBuilder.video(uri, maxMediaWidth)}`;
+					break;
+				}
+			}
+		}
+
+		return {
+			kind: lsp.MarkupKind.Markdown,
+			value: documentation,
+		};
 	}
 
 	#getPathInsertText(context: PathCompletionContext, name: string): string {

@@ -6,10 +6,10 @@
 import * as lsp from 'vscode-languageserver-protocol';
 import { ILogger, LogLevel } from '../logging';
 import { MdTableOfContentsProvider, TableOfContents, TocEntry } from '../tableOfContents';
+import { MdLinkDefinition, MdLinkKind } from '../types/documentLink';
 import { isBefore } from '../types/position';
-import { makeRange } from '../types/range';
 import { ITextDocument } from '../types/textDocument';
-import { MdLinkDefinition, MdLinkKind, MdLinkProvider } from './documentLinks';
+import { MdLinkProvider } from './documentLinks';
 
 interface MarkdownSymbol {
 	readonly level: number;
@@ -59,7 +59,7 @@ export class MdDocumentSymbolProvider {
 			level: -Infinity,
 			children: [],
 			parent: undefined,
-			range: makeRange(0, 0, document.lineCount + 1, 0),
+			range: lsp.Range.create(0, 0, document.lineCount + 1, 0),
 		};
 		const additionalSymbols = [...linkSymbols];
 		this.#buildTocSymbolTree(root, toc.entries, additionalSymbols);

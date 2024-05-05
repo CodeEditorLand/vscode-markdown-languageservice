@@ -8,17 +8,18 @@ import * as picomatch from 'picomatch';
 import * as lsp from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
 import { LsConfiguration } from '../config';
+import { ILogger, LogLevel } from '../logging';
 import { MdTableOfContentsProvider } from '../tableOfContents';
+import { HrefKind, InternalHref, LinkDefinitionSet, MdLink, MdLinkDefinition, MdLinkKind, MdLinkSource, ReferenceLinkMap } from '../types/documentLink';
 import { translatePosition } from '../types/position';
 import { modifyRange } from '../types/range';
 import { getDocUri, ITextDocument } from '../types/textDocument';
 import { Disposable, IDisposable } from '../util/dispose';
-import { looksLikeMarkdownUri } from '../util/file';
 import { Limiter } from '../util/limiter';
+import { isSameResource, looksLikeMarkdownUri, parseLocationInfoFromFragment } from '../util/path';
 import { ResourceMap } from '../util/resourceMap';
 import { FileStat, IWorkspace, IWorkspaceWithWatching, statLinkToMarkdownFile } from '../workspace';
-import { HrefKind, InternalHref, LinkDefinitionSet, MdLink, MdLinkDefinition, MdLinkKind, MdLinkProvider, MdLinkSource, parseLocationInfoFromFragment, ReferenceLinkMap } from './documentLinks';
-import { ILogger, LogLevel } from '../logging';
+import { MdLinkProvider } from './documentLinks';
 
 /**
  * The severity at which diagnostics are reported
@@ -202,7 +203,7 @@ export class DiagnosticComputer {
 		])).flat();
 
 		this.#logger.log(LogLevel.Trace, 'DiagnosticComputer.compute finished', { document: doc.uri, version: doc.version, diagnostics });
-		
+
 		return {
 			links: links,
 			statCache,
@@ -226,7 +227,7 @@ export class DiagnosticComputer {
 
 			if (link.href.kind === HrefKind.Internal
 				&& link.source.hrefText.startsWith('#')
-				&& link.href.path.toString() === doc.uri.toString()
+				&& isSameResource(link.href.path, getDocUri(doc))
 				&& link.href.fragment
 				&& !toc.lookup(link.href.fragment)
 			) {
@@ -407,7 +408,7 @@ export class DiagnosticComputer {
 									continue;
 								}
 
-								if (!toc.lookup(link.fragment) && !this.#isIgnoredLink(options, link.source.pathText) && !this.#isIgnoredLink(options, link.source.hrefText)) {
+								if (!toc?.lookup(link.fragment) && !this.#isIgnoredLink(options, link.source.pathText) && !this.#isIgnoredLink(options, link.source.hrefText)) {
 									const range = (link.source.fragmentRange && modifyRange(link.source.fragmentRange, translatePosition(link.source.fragmentRange.start, { characterDelta: -1 }), undefined)) ?? link.source.hrefRange;
 									diagnostics.push({
 										code: DiagnosticCode.link_noSuchHeaderInFile,
@@ -617,7 +618,7 @@ export class DiagnosticsManager extends Disposable implements IPullDiagnosticsMa
 
 		this._register(this.#linkWatcher.onDidChangeLinkedToFile(e => {
 			logger.log(LogLevel.Trace, 'DiagnosticsManager.onDidChangeLinkedToFile', { resource: e.changedResource });
-			
+
 			this.#onLinkedToFileChanged.fire({
 				changedResource: e.changedResource,
 				linkingResources: Array.from(e.linkingFiles),

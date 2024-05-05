@@ -9,15 +9,6 @@ export function arePositionsEqual(a: Position, b: Position): boolean {
 	return a.line === b.line && a.character === b.character;
 }
 
-export function isPosition(other: any): other is Position {
-	if (!other) {
-		return false;
-	}
-
-	const { line, character } = <Position>other;
-	return typeof line === 'number' && typeof character === 'number';
-}
-
 export function translatePosition(pos: Position, change: { lineDelta?: number; characterDelta?: number }): Position {
 	return {
 		line: pos.line + (change.lineDelta ?? 0),

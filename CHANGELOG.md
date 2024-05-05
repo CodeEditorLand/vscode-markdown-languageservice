@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.5.0-alpha.6 — April 25, 2024
+- Clearly identify temporary versions of documents by setting version to `-1`. This lets clients know not to cache them.
+
+## 0.5.0-alpha.5 — April 5, 2024
+- Add links to open file in path completions.
+- Add previews for image and video files in path completions.
+- Allow hovering over image/video paths to see preview of image or video.
+
+## 0.5.0-alpha.4 — April 4, 2024
+- Change update links on paste to generate minimal edit.
+- Update github slugifier to more closely match github.
+
+## 0.5.0-alpha.3 — April 1, 2024
+- Add experimental support for update links in text copied across Markdown files.
+
+## 0.5.0-alpha.2 — March 28, 2024
+- Fix renaming for cases where headers are duplicated.
+- Give slugifiers control over how duplicate header ids are generated instead of hardcoding.
+
 ## 0.5.0-alpha.1 — March 11, 2024
 - Fix lsp type references. Thanks @remcohaszing!
 - Fix extracting of auto links.

@@ -3,53 +3,51 @@
 	"version": "0.0.1",
 	"private": false,
 	"description": "Markdown language service",
-	"homepage": "https://github.com/CodeEditorLand/Foundation#readme",
+	"keywords": [
+		"land"
+	],
+	"homepage": "HTTPS://GitHub.Com/CodeEditorLand/LandMarkdownLanguageService#readme",
 	"bugs": {
-		"url": "https://github.com/CodeEditorLand/Foundation/issues"
+		"url": "HTTPS://GitHub.Com/CodeEditorLand/LandMarkdownLanguageService/issues"
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/CodeEditorLand/Foundation.git"
+		"url": "git+HTTPS://github.com/CodeEditorLand/LandMarkdownLanguageService.git"
 	},
 	"license": "SEE LICENSE IN LICENSE",
 	"author": {
-		"name": "Playform",
-		"email": "Hello@Playform.Cloud",
-		"url": "https://playform.cloud"
+		"name": "🌆 — Land —",
+		"email": "Land@PlayForm.Cloud",
+		"url": "HTTPS://Land.PlayForm.Cloud"
 	},
 	"type": "module",
 	"main": "./out/index.js",
 	"types": "./types/vscode-markdown-languageservice.d.ts",
 	"files": [
 		"out/**/*.js",
-		"!out/test/*.js",
+		"!out/test/**/*.js",
 		"types/vscode-markdown-languageservice.d.ts"
 	],
 	"scripts": {
+		"Document": "Document 'Source/**/*.ts'",
 		"api-extractor": "mkdirp etc && npx api-extractor run --local",
 		"compile": "tsc -b tsconfig.json",
-		"prepublishOnly": "TypeScriptESBuild 'Source/**/*.ts'",
-		"watch": "tsc -b tsconfig.json --watch"
+		"prepublishOnly": "Build 'Source/**/*.ts'"
 	},
 	"dependencies": {
-		"@vscode/l10n": "0.0.18",
-		"node-html-parser": "6.1.12",
-		"picomatch": "4.0.1",
-		"vscode-languageserver-protocol": "3.17.5",
-		"vscode-uri": "3.0.8"
+		"node-html-parser": "6.1.13",
+		"picomatch": "4.0.2"
 	},
 	"devDependencies": {
-		"@microsoft/api-extractor": "7.43.0",
-		"@types/markdown-it": "13.0.7",
-		"@types/mocha": "10.0.6",
+		"@playform/build": "0.0.7",
+		"@playform/document": "0.0.6",
+		"@types/markdown-it": "14.0.1",
 		"@types/node": "20.x",
 		"@types/picomatch": "2.3.3",
+		"github-slugger": "2.0.0",
 		"markdown-it": "14.1.0",
 		"mkdirp": "3.0.1",
-		"mocha": "10.3.0",
-		"typescript": "5.4.2",
-		"typescript-esbuild": "0.4.5",
-		"vscode-languageserver-textdocument": "1.0.11"
+		"source-map-support": "0.5.21"
 	},
 	"publishConfig": {
 		"access": "public"
