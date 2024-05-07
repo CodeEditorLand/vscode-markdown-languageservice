@@ -14,7 +14,7 @@ const { TextDocument } = require('vscode-languageserver-textdocument');
 // Create an instance of markdown it to analyze files.
 const mdIt = MarkdownIt({ html: true });
 
-/** @type {mdls.IMdParser} */
+
 const parser = new class {
 	slugifier = mdls.githubSlugifier;
 
@@ -39,58 +39,58 @@ const myDocument = TextDocument.create(
 // Create a simple virtual workspace. This is required as many markdown language features
 // operate across files.
 
-/** @type {mdls.IWorkspace} */
+
 const workspace = new class {
-	/** @returns {readonly URI[]} */
+	
 	get workspaceFolders() {
 		return [];
 	}
 
-	/** @returns { Promise<Iterable<mdls.ITextDocument>>} */
+	
 	async getAllMarkdownDocuments() {
 		return [myDocument];
 	}
 
-	hasMarkdownDocument(/** @type {URI} */ resource) {
+	hasMarkdownDocument( resource) {
 		return resource.toString() === myDocument.uri;
 	}
 
-	/** @returns {Promise<mdls.ITextDocument | undefined>} */
-	async openMarkdownDocument(/** @type {URI} */resource) {
+	
+	async openMarkdownDocument(resource) {
 		if (resource.toString() === myDocument.uri) {
 			return myDocument;
 		}
 		return undefined;
 	}
 
-	/** @returns {Promise<mdls.FileStat | undefined>} */
-	async stat(/** @type {URI} */ resource) {
+	
+	async stat( resource) {
 		if (resource.toString() === myDocument.uri) {
 			return {};
 		}
 		return undefined;
 	}
 
-	async readDirectory(/** @type {URI} */resource) {
+	async readDirectory(resource) {
 		// Not implemented
 		return [];
 	}
 
 
-	/** @type {Emitter<mdls.ITextDocument>} */
+	
 	#onDidChangeMarkdownDocument = new Emitter();
 	onDidChangeMarkdownDocument = this.#onDidChangeMarkdownDocument.event;
 
-	/** @type {Emitter<mdls.ITextDocument>} */
+	
 	#onDidCreateMarkdownDocument = new Emitter();
 	onDidCreateMarkdownDocument = this.#onDidCreateMarkdownDocument.event;
 
-	/** @type {Emitter<URI>} */
+	
 	#onDidDeleteMarkdownDocument = new Emitter();
 	onDidDeleteMarkdownDocument = this.#onDidDeleteMarkdownDocument.event;
 };
 
-/** @type { mdls.ILogger} */
+
 const consoleLogger = {
 	log(level, title, message, data) {
 		// console.debug(title, message, data);
