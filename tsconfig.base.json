@@ -1,9 +1,7 @@
 {
 	"compilerOptions": {
 		"target": "es2022",
-		"lib": [
-			"ES2021",
-		],
+		"lib": ["ES2021"],
 		"sourceMap": true,
 		"module": "commonjs",
 		"strict": true,
