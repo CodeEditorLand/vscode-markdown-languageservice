@@ -6,8 +6,14 @@
 		"declarationMap": true,
 		"rootDir": "./src",
 		"outDir": "./out",
-		"types": ["node"]
+		"types": [
+			"node"
+		]
 	},
-	"include": ["src/**/*"],
-	"exclude": ["src/test/**/"]
+	"include": [
+		"src/**/*"
+	],
+	"exclude": [
+		"src/test/**/"
+	]
 }
