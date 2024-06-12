@@ -1,17 +1,17 @@
 {
 	"dependencies": {
-		"node-html-parser": "^6.1.13",
-		"picomatch": "^4.0.2"
+		"node-html-parser": "6.1.13",
+		"picomatch": "4.0.2"
 	},
 	"description": "Markdown language service",
 	"devDependencies": {
-		"@types/markdown-it": "^14.1.1",
+		"@types/markdown-it": "14.1.1",
 		"@types/node": "20.x",
-		"@types/picomatch": "^2.3.3",
-		"github-slugger": "^2.0.0",
-		"markdown-it": "^14.1.0",
-		"mkdirp": "^3.0.1",
-		"source-map-support": "^0.5.21"
+		"@types/picomatch": "2.3.3",
+		"github-slugger": "2.0.0",
+		"markdown-it": "14.1.0",
+		"mkdirp": "3.0.1",
+		"source-map-support": "0.5.21"
 	},
 	"files": [
 		"out/**/*.js",
