@@ -1,9 +1,22 @@
 {
+	"name": "vscode-markdown-languageservice",
+	"description": "Markdown language service",
+	"main": "./out/index.js",
+	"types": "./types/vscode-markdown-languageservice.d.ts",
+	"files": [
+		"out/**/*.js",
+		"!out/test/**/*.js",
+		"types/vscode-markdown-languageservice.d.ts"
+	],
+	"scripts": {
+		"api-extractor": "mkdirp etc && npx api-extractor run --local",
+		"compile": "tsc -b tsconfig.json",
+		"prepublishOnly": "npm run compile && npm run api-extractor"
+	},
 	"dependencies": {
 		"node-html-parser": "6.1.13",
 		"picomatch": "4.0.2"
 	},
-	"description": "Markdown language service",
 	"devDependencies": {
 		"@types/markdown-it": "14.1.1",
 		"@types/node": "20.x",
@@ -12,18 +25,5 @@
 		"markdown-it": "14.1.0",
 		"mkdirp": "3.0.1",
 		"source-map-support": "0.5.21"
-	},
-	"files": [
-		"out/**/*.js",
-		"!out/test/**/*.js",
-		"types/vscode-markdown-languageservice.d.ts"
-	],
-	"main": "./out/index.js",
-	"name": "vscode-markdown-languageservice",
-	"scripts": {
-		"api-extractor": "mkdirp etc && npx api-extractor run --local",
-		"compile": "tsc -b tsconfig.json",
-		"prepublishOnly": "npm run compile && npm run api-extractor"
-	},
-	"types": "./types/vscode-markdown-languageservice.d.ts"
+	}
 }
