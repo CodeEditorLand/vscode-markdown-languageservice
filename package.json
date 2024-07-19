@@ -14,16 +14,16 @@
 		"prepublishOnly": "npm run compile && npm run api-extractor"
 	},
 	"dependencies": {
-		"node-html-parser": "6.1.13",
-		"picomatch": "4.0.2"
+		"node-html-parser": "6.1.5",
+		"picomatch": "2.3.1"
 	},
 	"devDependencies": {
-		"@types/markdown-it": "14.1.1",
-		"@types/node": "20.x",
-		"@types/picomatch": "3.0.0",
+		"@types/markdown-it": "12.2.3",
+		"@types/node": "18.x",
+		"@types/picomatch": "2.3.0",
 		"github-slugger": "2.0.0",
-		"markdown-it": "14.1.0",
-		"mkdirp": "3.0.1",
+		"markdown-it": "13.0.1",
+		"mkdirp": "1.0.4",
 		"source-map-support": "0.5.21"
 	}
 }
