@@ -22,14 +22,14 @@ export enum LogLevel {
  */
 export interface ILogger {
 	/**
-	 * Get the current log level. 
+	 * Get the current log level.
 	 */
-	get level(): LogLevel; 
+	get level(): LogLevel;
 
 	/**
 	 * Log a message at a given log level.
-	 * 
-	 * @param level The level the message should be logged at. 
+	 *
+	 * @param level The level the message should be logged at.
 	 * @param message The main text of the log.
 	 * @param data Additional information about what is being logged.
 	 */
