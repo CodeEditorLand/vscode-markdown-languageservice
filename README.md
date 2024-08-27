@@ -96,7 +96,7 @@ Currently supported language features:
 
 -   (experimental) Update links when coping and pasting text between files.
 
-## Usage
+## 🛠️ Usage
 
 To get started using this library, first install it into your workspace:
 
