@@ -3,17 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken, CancellationTokenSource } from 'vscode-languageserver-protocol';
-import { URI } from 'vscode-uri';
-import { getDocUri, ITextDocument } from './types/textDocument';
-import { Disposable } from './util/dispose';
-import { lazy, Lazy } from './util/lazy';
-import { ResourceMap } from './util/resourceMap';
-import { IWorkspace } from './workspace';
+import {
+	CancellationToken,
+	CancellationTokenSource,
+} from "vscode-languageserver-protocol";
+import { URI } from "vscode-uri";
 
+import { getDocUri, ITextDocument } from "./types/textDocument";
+import { Disposable } from "./util/dispose";
+import { lazy, Lazy } from "./util/lazy";
+import { ResourceMap } from "./util/resourceMap";
+import { IWorkspace } from "./workspace";
 
-
-type GetValueFn<T> = (document: ITextDocument, token: CancellationToken) => Promise<T>;
+type GetValueFn<T> = (
+	document: ITextDocument,
+	token: CancellationToken,
+) => Promise<T>;
 
 /**
  * Cache of information per-document in the workspace.
@@ -21,13 +26,14 @@ type GetValueFn<T> = (document: ITextDocument, token: CancellationToken) => Prom
  * The values are computed lazily and invalidated when the document changes.
  */
 export class MdDocumentInfoCache<T> extends Disposable {
-
 	readonly #cache = new ResourceMap<{
 		readonly value: Lazy<Promise<T>>;
 		readonly cts: CancellationTokenSource;
 	}>();
 
-	readonly #loadingDocuments = new ResourceMap<Promise<ITextDocument | undefined>>();
+	readonly #loadingDocuments = new ResourceMap<
+		Promise<ITextDocument | undefined>
+	>();
 
 	readonly #workspace: IWorkspace;
 	readonly #getValue: GetValueFn<T>;
@@ -38,8 +44,17 @@ export class MdDocumentInfoCache<T> extends Disposable {
 		this.#workspace = workspace;
 		this.#getValue = getValue;
 
-		this._register(this.#workspace.onDidChangeMarkdownDocument(doc => this.#invalidate(doc)));
-		this._register(this.#workspace.onDidDeleteMarkdownDocument(this.#onDidDeleteDocument, this));
+		this._register(
+			this.#workspace.onDidChangeMarkdownDocument((doc) =>
+				this.#invalidate(doc),
+			),
+		);
+		this._register(
+			this.#workspace.onDidDeleteMarkdownDocument(
+				this.#onDidDeleteDocument,
+				this,
+			),
+		);
 	}
 
 	public async get(resource: URI): Promise<T | undefined> {
@@ -116,7 +131,6 @@ export class MdDocumentInfoCache<T> extends Disposable {
  * However the computation of the values is still lazy.
  */
 export class MdWorkspaceInfoCache<T> extends Disposable {
-
 	readonly #cache = new ResourceMap<{
 		readonly value: Lazy<Promise<T>>;
 		readonly cts: CancellationTokenSource;
@@ -133,22 +147,41 @@ export class MdWorkspaceInfoCache<T> extends Disposable {
 		this.#workspace = workspace;
 		this.#getValue = getValue;
 
-		this._register(this.#workspace.onDidChangeMarkdownDocument(this.#onDidChangeDocument, this));
-		this._register(this.#workspace.onDidCreateMarkdownDocument(this.#onDidChangeDocument, this));
-		this._register(this.#workspace.onDidDeleteMarkdownDocument(this.#onDidDeleteDocument, this));
+		this._register(
+			this.#workspace.onDidChangeMarkdownDocument(
+				this.#onDidChangeDocument,
+				this,
+			),
+		);
+		this._register(
+			this.#workspace.onDidCreateMarkdownDocument(
+				this.#onDidChangeDocument,
+				this,
+			),
+		);
+		this._register(
+			this.#workspace.onDidDeleteMarkdownDocument(
+				this.#onDidDeleteDocument,
+				this,
+			),
+		);
 	}
 
 	public async entries(): Promise<Array<[URI, T]>> {
 		await this.#ensureInit();
 
-		return Promise.all(Array.from(this.#cache.entries(), async ([k, v]) => {
-			return [k, await v.value.value];
-		}));
+		return Promise.all(
+			Array.from(this.#cache.entries(), async ([k, v]) => {
+				return [k, await v.value.value];
+			}),
+		);
 	}
 
 	public async values(): Promise<Array<T>> {
 		await this.#ensureInit();
-		return Promise.all(Array.from(this.#cache.entries(), x => x[1].value.value));
+		return Promise.all(
+			Array.from(this.#cache.entries(), (x) => x[1].value.value),
+		);
 	}
 
 	public async getForDocs(docs: readonly ITextDocument[]): Promise<T[]> {
@@ -158,7 +191,9 @@ export class MdWorkspaceInfoCache<T> extends Disposable {
 			}
 		}
 
-		return Promise.all(docs.map(doc => this.#cache.get(getDocUri(doc))!.value.value));
+		return Promise.all(
+			docs.map((doc) => this.#cache.get(getDocUri(doc))!.value.value),
+		);
 	}
 
 	async #ensureInit(): Promise<void> {
@@ -169,7 +204,8 @@ export class MdWorkspaceInfoCache<T> extends Disposable {
 	}
 
 	async #populateCache(): Promise<void> {
-		const markdownDocuments = await this.#workspace.getAllMarkdownDocuments();
+		const markdownDocuments =
+			await this.#workspace.getAllMarkdownDocuments();
 		for (const document of markdownDocuments) {
 			if (!this.#cache.has(getDocUri(document))) {
 				this.#update(document);
@@ -183,7 +219,7 @@ export class MdWorkspaceInfoCache<T> extends Disposable {
 		const cts = new CancellationTokenSource();
 		this.#cache.set(getDocUri(document), {
 			value: lazy(() => this.#getValue(document, cts.token)),
-			cts
+			cts,
 		});
 	}
 

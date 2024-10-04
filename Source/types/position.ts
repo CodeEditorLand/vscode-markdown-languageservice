@@ -3,13 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Position } from 'vscode-languageserver-protocol';
+import { Position } from "vscode-languageserver-protocol";
 
 export function arePositionsEqual(a: Position, b: Position): boolean {
 	return a.line === b.line && a.character === b.character;
 }
 
-export function translatePosition(pos: Position, change: { lineDelta?: number; characterDelta?: number }): Position {
+export function translatePosition(
+	pos: Position,
+	change: { lineDelta?: number; characterDelta?: number },
+): Position {
 	return {
 		line: pos.line + (change.lineDelta ?? 0),
 		character: pos.character + (change.characterDelta ?? 0),

@@ -3,11 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Event } from 'vscode-languageserver-protocol';
-import { URI, Utils } from 'vscode-uri';
-import { defaultMarkdownFileExtension, LsConfiguration } from './config';
-import { ITextDocument } from './types/textDocument';
-import { ResourceMap } from './util/resourceMap';
+import { Event } from "vscode-languageserver-protocol";
+import { URI, Utils } from "vscode-uri";
+
+import { defaultMarkdownFileExtension, LsConfiguration } from "./config";
+import { ITextDocument } from "./types/textDocument";
+import { ResourceMap } from "./util/resourceMap";
 
 /**
  * Result of {@link IWorkspace.stat stating} a file.
@@ -21,7 +22,7 @@ export interface FileStat {
 
 /**
  * Information about a parent markdown document that contains sub-documents.
- * 
+ *
  * This could be a notebook document for example, where the `children` are the Markdown cells in the notebook.
  */
 export interface ContainingDocumentContext {
@@ -40,7 +41,6 @@ export interface ContainingDocumentContext {
  * Provide information about the contents of a workspace.
  */
 export interface IWorkspace {
-
 	/**
 	 * Get the root folders for this workspace.
 	 */
@@ -99,7 +99,9 @@ export interface IWorkspace {
 	 *
 	 * @returns List of `[fileName, metadata]` tuples.
 	 */
-	readDirectory(resource: URI): Promise<Iterable<readonly [string, FileStat]>>;
+	readDirectory(
+		resource: URI,
+	): Promise<Iterable<readonly [string, FileStat]>>;
 
 	/**
 	 * Get the document that contains `resource` as a sub document.
@@ -108,7 +110,9 @@ export interface IWorkspace {
 	 *
 	 * @returns The parent document info or `undefined` if none.
 	 */
-	getContainingDocument?(resource: URI): ContainingDocumentContext | undefined;
+	getContainingDocument?(
+		resource: URI,
+	): ContainingDocumentContext | undefined;
 }
 
 /**
@@ -135,15 +139,16 @@ export interface IWorkspaceWithWatching extends IWorkspace {
 	watchFile(path: URI, options: FileWatcherOptions): IFileSystemWatcher;
 }
 
-export function isWorkspaceWithFileWatching(workspace: IWorkspace): workspace is IWorkspaceWithWatching {
-	return 'watchFile' in workspace;
+export function isWorkspaceWithFileWatching(
+	workspace: IWorkspace,
+): workspace is IWorkspaceWithWatching {
+	return "watchFile" in workspace;
 }
 
 /**
  * Watches a file for changes to it on the file system.
  */
 export interface IFileSystemWatcher {
-
 	/**
 	 * Dispose of the watcher. This should stop watching and clean up any associated resources.
 	 */
@@ -159,17 +164,23 @@ export interface IFileSystemWatcher {
 	readonly onDidDelete: Event<URI>;
 }
 
-export function getWorkspaceFolder(workspace: IWorkspace, docUri: URI): URI | undefined {
+export function getWorkspaceFolder(
+	workspace: IWorkspace,
+	docUri: URI,
+): URI | undefined {
 	if (workspace.workspaceFolders.length === 0) {
 		return undefined;
 	}
 
 	// Find the longest match
 	const possibleWorkspaces = workspace.workspaceFolders
-		.filter(folder =>
-			folder.scheme === docUri.scheme
-			&& folder.authority === docUri.authority
-			&& (docUri.fsPath.startsWith(folder.fsPath + '/') || docUri.fsPath.startsWith(folder.fsPath + '\\')))
+		.filter(
+			(folder) =>
+				folder.scheme === docUri.scheme &&
+				folder.authority === docUri.authority &&
+				(docUri.fsPath.startsWith(folder.fsPath + "/") ||
+					docUri.fsPath.startsWith(folder.fsPath + "\\")),
+		)
 		.sort((a, b) => b.fsPath.length - a.fsPath.length);
 
 	if (possibleWorkspaces.length) {
@@ -181,7 +192,11 @@ export function getWorkspaceFolder(workspace: IWorkspace, docUri: URI): URI | un
 	return workspace.workspaceFolders[0];
 }
 
-export async function openLinkToMarkdownFile(config: LsConfiguration, workspace: IWorkspace, resource: URI): Promise<ITextDocument | undefined> {
+export async function openLinkToMarkdownFile(
+	config: LsConfiguration,
+	workspace: IWorkspace,
+	resource: URI,
+): Promise<ITextDocument | undefined> {
 	try {
 		const doc = await workspace.openMarkdownDocument(resource);
 		if (doc) {
@@ -204,7 +219,12 @@ export async function openLinkToMarkdownFile(config: LsConfiguration, workspace:
  *
  * @returns The resolved URI or `undefined` if the file does not exist.
  */
-export async function statLinkToMarkdownFile(config: LsConfiguration, workspace: IWorkspace, linkUri: URI, out_statCache?: ResourceMap<{ readonly exists: boolean }>): Promise<URI | undefined> {
+export async function statLinkToMarkdownFile(
+	config: LsConfiguration,
+	workspace: IWorkspace,
+	linkUri: URI,
+	out_statCache?: ResourceMap<{ readonly exists: boolean }>,
+): Promise<URI | undefined> {
 	const exists = async (uri: URI): Promise<boolean> => {
 		const result = await workspace.stat(uri);
 		out_statCache?.set(uri, { exists: !!result });
@@ -217,22 +237,31 @@ export async function statLinkToMarkdownFile(config: LsConfiguration, workspace:
 
 	// We don't think the file exists. See if we need to append `.md`
 	const dotMdResource = tryAppendMarkdownFileExtension(config, linkUri);
-	if (dotMdResource && await exists(dotMdResource)) {
+	if (dotMdResource && (await exists(dotMdResource))) {
 		return dotMdResource;
 	}
 
 	return undefined;
 }
 
-export function tryAppendMarkdownFileExtension(config: LsConfiguration, linkUri: URI): URI | undefined {
-	const ext = Utils.extname(linkUri).toLowerCase().replace(/^\./, '');
+export function tryAppendMarkdownFileExtension(
+	config: LsConfiguration,
+	linkUri: URI,
+): URI | undefined {
+	const ext = Utils.extname(linkUri).toLowerCase().replace(/^\./, "");
 	if (config.markdownFileExtensions.includes(ext)) {
 		return linkUri;
 	}
 
-	if (ext === '' || !config.knownLinkedToFileExtensions.includes(ext)) {
-		return linkUri.with({ path: linkUri.path + '.' + (config.markdownFileExtensions[0] ?? defaultMarkdownFileExtension) });
+	if (ext === "" || !config.knownLinkedToFileExtensions.includes(ext)) {
+		return linkUri.with({
+			path:
+				linkUri.path +
+				"." +
+				(config.markdownFileExtensions[0] ??
+					defaultMarkdownFileExtension),
+		});
 	}
-	
+
 	return undefined;
 }

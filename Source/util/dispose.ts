@@ -8,10 +8,10 @@ export interface IDisposable {
 }
 
 export class MultiDisposeError extends Error {
-	constructor(
-		public readonly errors: any[]
-	) {
-		super(`Encountered errors while disposing of store. Errors: [${errors.join(', ')}]`);
+	constructor(public readonly errors: any[]) {
+		super(
+			`Encountered errors while disposing of store. Errors: [${errors.join(", ")}]`,
+		);
 	}
 }
 
@@ -59,4 +59,3 @@ export abstract class Disposable {
 		return this.#isDisposed;
 	}
 }
-

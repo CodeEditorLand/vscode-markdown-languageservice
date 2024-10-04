@@ -4,5 +4,5 @@
  *--------------------------------------------------------------------------------------------*/
 
 export function codeActionKindContains(kindA: string, kindB: string): unknown {
-	return kindA === kindB || kindB.startsWith(kindA + '.');
+	return kindA === kindB || kindB.startsWith(kindA + ".");
 }

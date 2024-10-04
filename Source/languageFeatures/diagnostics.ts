@@ -3,43 +3,62 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as l10n from '@vscode/l10n';
-import * as picomatch from 'picomatch';
-import * as lsp from 'vscode-languageserver-protocol';
-import { URI } from 'vscode-uri';
-import { LsConfiguration } from '../config';
-import { ILogger, LogLevel } from '../logging';
-import { MdTableOfContentsProvider } from '../tableOfContents';
-import { HrefKind, InternalHref, LinkDefinitionSet, MdLink, MdLinkDefinition, MdLinkKind, MdLinkSource, ReferenceLinkMap } from '../types/documentLink';
-import { translatePosition } from '../types/position';
-import { modifyRange } from '../types/range';
-import { getDocUri, ITextDocument } from '../types/textDocument';
-import { Disposable, IDisposable } from '../util/dispose';
-import { Limiter } from '../util/limiter';
-import { isSameResource, looksLikeMarkdownUri, parseLocationInfoFromFragment } from '../util/path';
-import { ResourceMap } from '../util/resourceMap';
-import { FileStat, IWorkspace, IWorkspaceWithWatching, statLinkToMarkdownFile } from '../workspace';
-import { MdLinkProvider } from './documentLinks';
+import * as l10n from "@vscode/l10n";
+import * as picomatch from "picomatch";
+import * as lsp from "vscode-languageserver-protocol";
+import { URI } from "vscode-uri";
+
+import { LsConfiguration } from "../config";
+import { ILogger, LogLevel } from "../logging";
+import { MdTableOfContentsProvider } from "../tableOfContents";
+import {
+	HrefKind,
+	InternalHref,
+	LinkDefinitionSet,
+	MdLink,
+	MdLinkDefinition,
+	MdLinkKind,
+	MdLinkSource,
+	ReferenceLinkMap,
+} from "../types/documentLink";
+import { translatePosition } from "../types/position";
+import { modifyRange } from "../types/range";
+import { getDocUri, ITextDocument } from "../types/textDocument";
+import { Disposable, IDisposable } from "../util/dispose";
+import { Limiter } from "../util/limiter";
+import {
+	isSameResource,
+	looksLikeMarkdownUri,
+	parseLocationInfoFromFragment,
+} from "../util/path";
+import { ResourceMap } from "../util/resourceMap";
+import {
+	FileStat,
+	IWorkspace,
+	IWorkspaceWithWatching,
+	statLinkToMarkdownFile,
+} from "../workspace";
+import { MdLinkProvider } from "./documentLinks";
 
 /**
  * The severity at which diagnostics are reported
  */
 export enum DiagnosticLevel {
 	/** Don't report this diagnostic. */
-	ignore = 'ignore',
+	ignore = "ignore",
 
 	/**
 	 * Report the diagnostic at a hint level.
-	 * 
+	 *
 	 * Hints will typically not be directly reported by editors, but may show up as unused spans.
 	 */
-	hint = 'hint',
+	hint = "hint",
 
 	/** Report the diagnostic as a warning. */
-	warning = 'warning',
+	warning = "warning",
 
 	/** Report the diagnostic as an error. */
-	error = 'error',
+	error = "error",
 }
 
 /**
@@ -82,13 +101,20 @@ export interface DiagnosticOptions {
 	readonly ignoreLinks: readonly string[];
 }
 
-function toSeverity(level: DiagnosticLevel | undefined): lsp.DiagnosticSeverity | undefined {
+function toSeverity(
+	level: DiagnosticLevel | undefined,
+): lsp.DiagnosticSeverity | undefined {
 	switch (level) {
-		case DiagnosticLevel.error: return lsp.DiagnosticSeverity.Error;
-		case DiagnosticLevel.warning: return lsp.DiagnosticSeverity.Warning;
-		case DiagnosticLevel.hint: return lsp.DiagnosticSeverity.Hint;
-		case DiagnosticLevel.ignore: return undefined;
-		case undefined: return undefined;
+		case DiagnosticLevel.error:
+			return lsp.DiagnosticSeverity.Error;
+		case DiagnosticLevel.warning:
+			return lsp.DiagnosticSeverity.Warning;
+		case DiagnosticLevel.hint:
+			return lsp.DiagnosticSeverity.Hint;
+		case DiagnosticLevel.ignore:
+			return undefined;
+		case undefined:
+			return undefined;
 	}
 }
 
@@ -97,29 +123,28 @@ function toSeverity(level: DiagnosticLevel | undefined): lsp.DiagnosticSeverity 
  */
 export enum DiagnosticCode {
 	/** The linked to reference does not exist. */
-	link_noSuchReferences = 'link.no-such-reference',
+	link_noSuchReferences = "link.no-such-reference",
 
 	/** The linked to heading does not exist in the current file. */
-	link_noSuchHeaderInOwnFile = 'link.no-such-header-in-own-file',
+	link_noSuchHeaderInOwnFile = "link.no-such-header-in-own-file",
 
 	/** The linked to local file does not exist. */
-	link_noSuchFile = 'link.no-such-file',
+	link_noSuchFile = "link.no-such-file",
 
 	/** The linked to heading does not exist in the another file. */
-	link_noSuchHeaderInFile = 'link.no-such-header-in-file',
+	link_noSuchHeaderInFile = "link.no-such-header-in-file",
 
 	/** The link definition is not used anywhere. */
-	link_unusedDefinition = 'link.unused-definition',
+	link_unusedDefinition = "link.unused-definition",
 
 	/** The link definition is not used anywhere. */
-	link_duplicateDefinition = 'link.duplicate-definition',
+	link_duplicateDefinition = "link.duplicate-definition",
 }
 
 /**
  * Map of file paths to markdown links to that file.
  */
 class FileLinkMap {
-
 	readonly #filesToLinksMap = new ResourceMap<{
 		readonly outgoingLinks: Array<{
 			readonly source: MdLinkSource;
@@ -134,11 +159,16 @@ class FileLinkMap {
 			}
 
 			const existingFileEntry = this.#filesToLinksMap.get(link.href.path);
-			const linkData = { source: link.source, fragment: link.href.fragment };
+			const linkData = {
+				source: link.source,
+				fragment: link.href.fragment,
+			};
 			if (existingFileEntry) {
 				existingFileEntry.outgoingLinks.push(linkData);
 			} else {
-				this.#filesToLinksMap.set(link.href.path, { outgoingLinks: [linkData] });
+				this.#filesToLinksMap.set(link.href.path, {
+					outgoingLinks: [linkData],
+				});
 			}
 		}
 	}
@@ -153,7 +183,6 @@ class FileLinkMap {
 }
 
 export class DiagnosticComputer {
-
 	readonly #configuration: LsConfiguration;
 	readonly #workspace: IWorkspace;
 	readonly #linkProvider: MdLinkProvider;
@@ -183,7 +212,10 @@ export class DiagnosticComputer {
 		readonly links: readonly MdLink[];
 		readonly statCache: ResourceMap<{ readonly exists: boolean }>;
 	}> {
-		this.#logger.log(LogLevel.Debug, 'DiagnosticComputer.compute', { document: doc.uri, version: doc.version });
+		this.#logger.log(LogLevel.Debug, "DiagnosticComputer.compute", {
+			document: doc.uri,
+			version: doc.version,
+		});
 
 		const { links, definitions } = await this.#linkProvider.getLinks(doc);
 		const statCache = new ResourceMap<{ readonly exists: boolean }>();
@@ -194,26 +226,41 @@ export class DiagnosticComputer {
 		// Current doc always implicitly exists
 		statCache.set(getDocUri(doc), { exists: true });
 
-		const diagnostics = (await Promise.all([
-			this.#validateFileLinks(options, links, statCache, token),
-			this.#validateFragmentLinks(doc, options, links, token),
-			Array.from(this.#validateReferenceLinks(options, links, definitions)),
-			Array.from(this.#validateUnusedLinkDefinitions(options, links)),
-			Array.from(this.#validateDuplicateLinkDefinitions(options, links)),
-		])).flat();
+		const diagnostics = (
+			await Promise.all([
+				this.#validateFileLinks(options, links, statCache, token),
+				this.#validateFragmentLinks(doc, options, links, token),
+				Array.from(
+					this.#validateReferenceLinks(options, links, definitions),
+				),
+				Array.from(this.#validateUnusedLinkDefinitions(options, links)),
+				Array.from(
+					this.#validateDuplicateLinkDefinitions(options, links),
+				),
+			])
+		).flat();
 
-		this.#logger.log(LogLevel.Trace, 'DiagnosticComputer.compute finished', { document: doc.uri, version: doc.version, diagnostics });
+		this.#logger.log(
+			LogLevel.Trace,
+			"DiagnosticComputer.compute finished",
+			{ document: doc.uri, version: doc.version, diagnostics },
+		);
 
 		return {
 			links: links,
 			statCache,
-			diagnostics: diagnostics
+			diagnostics: diagnostics,
 		};
 	}
 
-	async #validateFragmentLinks(doc: ITextDocument, options: DiagnosticOptions, links: readonly MdLink[], token: lsp.CancellationToken): Promise<lsp.Diagnostic[]> {
+	async #validateFragmentLinks(
+		doc: ITextDocument,
+		options: DiagnosticOptions,
+		links: readonly MdLink[],
+		token: lsp.CancellationToken,
+	): Promise<lsp.Diagnostic[]> {
 		const severity = toSeverity(options.validateFragmentLinks);
-		if (typeof severity === 'undefined') {
+		if (typeof severity === "undefined") {
 			return [];
 		}
 
@@ -224,12 +271,12 @@ export class DiagnosticComputer {
 
 		const diagnostics: lsp.Diagnostic[] = [];
 		for (const link of links) {
-
-			if (link.href.kind === HrefKind.Internal
-				&& link.source.hrefText.startsWith('#')
-				&& isSameResource(link.href.path, getDocUri(doc))
-				&& link.href.fragment
-				&& !toc.lookup(link.href.fragment)
+			if (
+				link.href.kind === HrefKind.Internal &&
+				link.source.hrefText.startsWith("#") &&
+				isSameResource(link.href.path, getDocUri(doc)) &&
+				link.href.fragment &&
+				!toc.lookup(link.href.fragment)
 			) {
 				// Don't validate line number links
 				if (parseLocationInfoFromFragment(link.href.fragment)) {
@@ -239,12 +286,15 @@ export class DiagnosticComputer {
 				if (!this.#isIgnoredLink(options, link.source.hrefText)) {
 					diagnostics.push({
 						code: DiagnosticCode.link_noSuchHeaderInOwnFile,
-						message: l10n.t('No header found: \'{0}\'', link.href.fragment),
+						message: l10n.t(
+							"No header found: '{0}'",
+							link.href.fragment,
+						),
 						range: link.source.hrefRange,
 						severity,
 						data: {
-							hrefText: link.source.hrefText
-						}
+							hrefText: link.source.hrefText,
+						},
 					});
 				}
 			}
@@ -253,17 +303,27 @@ export class DiagnosticComputer {
 		return diagnostics;
 	}
 
-	*#validateReferenceLinks(options: DiagnosticOptions, links: readonly MdLink[], definitions: LinkDefinitionSet): Iterable<lsp.Diagnostic> {
+	*#validateReferenceLinks(
+		options: DiagnosticOptions,
+		links: readonly MdLink[],
+		definitions: LinkDefinitionSet,
+	): Iterable<lsp.Diagnostic> {
 		const severity = toSeverity(options.validateReferences);
-		if (typeof severity === 'undefined') {
+		if (typeof severity === "undefined") {
 			return [];
 		}
 
 		for (const link of links) {
-			if (link.href.kind === HrefKind.Reference && !definitions.lookup(link.href.ref)) {
+			if (
+				link.href.kind === HrefKind.Reference &&
+				!definitions.lookup(link.href.ref)
+			) {
 				yield {
 					code: DiagnosticCode.link_noSuchReferences,
-					message: l10n.t('No link definition found: \'{0}\'', link.href.ref),
+					message: l10n.t(
+						"No link definition found: '{0}'",
+						link.href.ref,
+					),
 					range: link.source.hrefRange,
 					severity,
 					data: {
@@ -274,38 +334,50 @@ export class DiagnosticComputer {
 		}
 	}
 
-	*#validateUnusedLinkDefinitions(options: DiagnosticOptions, links: readonly MdLink[]): Iterable<lsp.Diagnostic> {
+	*#validateUnusedLinkDefinitions(
+		options: DiagnosticOptions,
+		links: readonly MdLink[],
+	): Iterable<lsp.Diagnostic> {
 		const errorSeverity = toSeverity(options.validateUnusedLinkDefinitions);
-		if (typeof errorSeverity === 'undefined') {
+		if (typeof errorSeverity === "undefined") {
 			return;
 		}
 
 		const usedRefs = new ReferenceLinkMap<boolean>();
 		for (const link of links) {
-			if (link.kind === MdLinkKind.Link && link.href.kind === HrefKind.Reference) {
+			if (
+				link.kind === MdLinkKind.Link &&
+				link.href.kind === HrefKind.Reference
+			) {
 				usedRefs.set(link.href.ref, true);
 			}
 		}
 
 		for (const link of links) {
-			if (link.kind === MdLinkKind.Definition && !usedRefs.lookup(link.ref.text)) {
+			if (
+				link.kind === MdLinkKind.Definition &&
+				!usedRefs.lookup(link.ref.text)
+			) {
 				yield {
 					code: DiagnosticCode.link_unusedDefinition,
-					message: l10n.t('Link definition is unused'),
+					message: l10n.t("Link definition is unused"),
 					range: link.source.range,
 					severity: errorSeverity,
-					tags: [
-						lsp.DiagnosticTag.Unnecessary,
-					],
-					data: link
+					tags: [lsp.DiagnosticTag.Unnecessary],
+					data: link,
 				};
 			}
 		}
 	}
 
-	*#validateDuplicateLinkDefinitions(options: DiagnosticOptions, links: readonly MdLink[]): Iterable<lsp.Diagnostic> {
-		const errorSeverity = toSeverity(options.validateDuplicateLinkDefinitions);
-		if (typeof errorSeverity === 'undefined') {
+	*#validateDuplicateLinkDefinitions(
+		options: DiagnosticOptions,
+		links: readonly MdLink[],
+	): Iterable<lsp.Diagnostic> {
+		const errorSeverity = toSeverity(
+			options.validateDuplicateLinkDefinitions,
+		);
+		if (typeof errorSeverity === "undefined") {
 			return;
 		}
 
@@ -329,17 +401,24 @@ export class DiagnosticComputer {
 			for (const duplicateDef of defs) {
 				yield {
 					code: DiagnosticCode.link_duplicateDefinition,
-					message: l10n.t('Link definition for \'{0}\' already exists', ref),
+					message: l10n.t(
+						"Link definition for '{0}' already exists",
+						ref,
+					),
 					range: duplicateDef.ref.range,
 					severity: errorSeverity,
-					relatedInformation:
-						defs
-							.filter(x => x !== duplicateDef)
-							.map(def => lsp.DiagnosticRelatedInformation.create(
-								{ uri: def.source.resource.toString(), range: def.ref.range },
-								l10n.t('Link is also defined here'),
-							)),
-					data: duplicateDef
+					relatedInformation: defs
+						.filter((x) => x !== duplicateDef)
+						.map((def) =>
+							lsp.DiagnosticRelatedInformation.create(
+								{
+									uri: def.source.resource.toString(),
+									range: def.ref.range,
+								},
+								l10n.t("Link is also defined here"),
+							),
+						),
+					data: duplicateDef,
 				};
 			}
 		}
@@ -352,13 +431,19 @@ export class DiagnosticComputer {
 		token: lsp.CancellationToken,
 	): Promise<lsp.Diagnostic[]> {
 		const pathErrorSeverity = toSeverity(options.validateFileLinks);
-		if (typeof pathErrorSeverity === 'undefined') {
+		if (typeof pathErrorSeverity === "undefined") {
 			return [];
 		}
-		const fragmentErrorSeverity = toSeverity(typeof options.validateMarkdownFileLinkFragments === 'undefined' ? options.validateFragmentLinks : options.validateMarkdownFileLinkFragments);
+		const fragmentErrorSeverity = toSeverity(
+			typeof options.validateMarkdownFileLinkFragments === "undefined"
+				? options.validateFragmentLinks
+				: options.validateMarkdownFileLinkFragments,
+		);
 
 		// We've already validated our own fragment links in `validateOwnHeaderLinks`
-		const linkSet = new FileLinkMap(links.filter(link => !link.source.hrefText.startsWith('#')));
+		const linkSet = new FileLinkMap(
+			links.filter((link) => !link.source.hrefText.startsWith("#")),
+		);
 		if (linkSet.size === 0) {
 			return [];
 		}
@@ -367,74 +452,132 @@ export class DiagnosticComputer {
 
 		const diagnostics: lsp.Diagnostic[] = [];
 		await Promise.all(
-			Array.from(linkSet.entries()).map(([path, { outgoingLinks: links }]) => {
-				return limiter.queue(async () => {
-					if (token.isCancellationRequested) {
-						return;
-					}
-
-					const resolvedHrefPath = await statLinkToMarkdownFile(this.#configuration, this.#workspace, path, statCache);
-					if (token.isCancellationRequested) {
-						return;
-					}
-
-					if (!resolvedHrefPath) {
-						for (const link of links) {
-							if (!this.#isIgnoredLink(options, link.source.pathText)) {
-								diagnostics.push({
-									code: DiagnosticCode.link_noSuchFile,
-									message: l10n.t('File does not exist at path: {0}', path.fsPath),
-									range: link.source.hrefRange,
-									severity: pathErrorSeverity,
-									data: {
-										fsPath: path.fsPath,
-										hrefText: link.source.pathText,
-									}
-								});
-							}
+			Array.from(linkSet.entries()).map(
+				([path, { outgoingLinks: links }]) => {
+					return limiter.queue(async () => {
+						if (token.isCancellationRequested) {
+							return;
 						}
-					} else if (typeof fragmentErrorSeverity !== 'undefined' && this.#isMarkdownPath(resolvedHrefPath)) {
-						// Validate each of the links to headers in the file
-						const fragmentLinks = links.filter(x => x.fragment);
-						if (fragmentLinks.length) {
-							const toc = await this.#tocProvider.get(resolvedHrefPath);
-							if (token.isCancellationRequested) {
-								return;
-							}
 
-							for (const link of fragmentLinks) {
-								// Don't validate line number links
-								if (parseLocationInfoFromFragment(link.fragment)) {
-									continue;
-								}
+						const resolvedHrefPath = await statLinkToMarkdownFile(
+							this.#configuration,
+							this.#workspace,
+							path,
+							statCache,
+						);
+						if (token.isCancellationRequested) {
+							return;
+						}
 
-								if (!toc?.lookup(link.fragment) && !this.#isIgnoredLink(options, link.source.pathText) && !this.#isIgnoredLink(options, link.source.hrefText)) {
-									const range = (link.source.fragmentRange && modifyRange(link.source.fragmentRange, translatePosition(link.source.fragmentRange.start, { characterDelta: -1 }), undefined)) ?? link.source.hrefRange;
+						if (!resolvedHrefPath) {
+							for (const link of links) {
+								if (
+									!this.#isIgnoredLink(
+										options,
+										link.source.pathText,
+									)
+								) {
 									diagnostics.push({
-										code: DiagnosticCode.link_noSuchHeaderInFile,
-										message: l10n.t('Header does not exist in file: {0}', link.fragment),
-										range: range,
-										severity: fragmentErrorSeverity,
+										code: DiagnosticCode.link_noSuchFile,
+										message: l10n.t(
+											"File does not exist at path: {0}",
+											path.fsPath,
+										),
+										range: link.source.hrefRange,
+										severity: pathErrorSeverity,
 										data: {
-											fragment: link.fragment,
-											hrefText: link.source.hrefText
+											fsPath: path.fsPath,
+											hrefText: link.source.pathText,
 										},
 									});
 								}
 							}
+						} else if (
+							typeof fragmentErrorSeverity !== "undefined" &&
+							this.#isMarkdownPath(resolvedHrefPath)
+						) {
+							// Validate each of the links to headers in the file
+							const fragmentLinks = links.filter(
+								(x) => x.fragment,
+							);
+							if (fragmentLinks.length) {
+								const toc =
+									await this.#tocProvider.get(
+										resolvedHrefPath,
+									);
+								if (token.isCancellationRequested) {
+									return;
+								}
+
+								for (const link of fragmentLinks) {
+									// Don't validate line number links
+									if (
+										parseLocationInfoFromFragment(
+											link.fragment,
+										)
+									) {
+										continue;
+									}
+
+									if (
+										!toc?.lookup(link.fragment) &&
+										!this.#isIgnoredLink(
+											options,
+											link.source.pathText,
+										) &&
+										!this.#isIgnoredLink(
+											options,
+											link.source.hrefText,
+										)
+									) {
+										const range =
+											(link.source.fragmentRange &&
+												modifyRange(
+													link.source.fragmentRange,
+													translatePosition(
+														link.source
+															.fragmentRange
+															.start,
+														{ characterDelta: -1 },
+													),
+													undefined,
+												)) ??
+											link.source.hrefRange;
+										diagnostics.push({
+											code: DiagnosticCode.link_noSuchHeaderInFile,
+											message: l10n.t(
+												"Header does not exist in file: {0}",
+												link.fragment,
+											),
+											range: range,
+											severity: fragmentErrorSeverity,
+											data: {
+												fragment: link.fragment,
+												hrefText: link.source.hrefText,
+											},
+										});
+									}
+								}
+							}
 						}
-					}
-				});
-			}));
+					});
+				},
+			),
+		);
 		return diagnostics;
 	}
 
 	#isMarkdownPath(resolvedHrefPath: URI) {
-		return this.#workspace.hasMarkdownDocument(resolvedHrefPath) || looksLikeMarkdownUri(this.#configuration, resolvedHrefPath);
+		return (
+			this.#workspace.hasMarkdownDocument(resolvedHrefPath) ||
+			looksLikeMarkdownUri(this.#configuration, resolvedHrefPath)
+		);
 	}
 
 	#isIgnoredLink(options: DiagnosticOptions, link: string): boolean {
-		return options.ignoreLinks.some(glob => picomatch.isMatch(link, glob));
+		return options.ignoreLinks.some((glob) =>
+			picomatch.isMatch(link, glob),
+		);
 	}
 }
 
@@ -442,7 +585,6 @@ export class DiagnosticComputer {
  * Stateful object that can more efficiently compute diagnostics for the workspace.
  */
 export interface IPullDiagnosticsManager {
-
 	/**
 	 * Dispose of the diagnostic manager and clean up any associated resources.
 	 */
@@ -459,11 +601,15 @@ export interface IPullDiagnosticsManager {
 	/**
 	 * Compute the current diagnostics for a file.
 	 */
-	computeDiagnostics(doc: ITextDocument, options: DiagnosticOptions, token: lsp.CancellationToken): Promise<lsp.Diagnostic[]>;
+	computeDiagnostics(
+		doc: ITextDocument,
+		options: DiagnosticOptions,
+		token: lsp.CancellationToken,
+	): Promise<lsp.Diagnostic[]>;
 
 	/**
-	 * Clean up resources that help provide diagnostics for a document. 
-	 * 
+	 * Clean up resources that help provide diagnostics for a document.
+	 *
 	 * You should call this when you will no longer be making diagnostic requests for a document, for example
 	 * when the file has been closed in the editor (but still exists on disk).
 	 */
@@ -471,16 +617,18 @@ export interface IPullDiagnosticsManager {
 }
 
 class FileLinkState extends Disposable {
-
-	readonly #onDidChangeLinkedToFile = this._register(new lsp.Emitter<{
-		readonly changedResource: URI;
-		readonly linkingFiles: Iterable<URI>;
-		readonly exists: boolean;
-	}>);
+	readonly #onDidChangeLinkedToFile = this._register(
+		new lsp.Emitter<{
+			readonly changedResource: URI;
+			readonly linkingFiles: Iterable<URI>;
+			readonly exists: boolean;
+		}>(),
+	);
 	/**
 	 * Event fired with a list of document uri when one of the links in the document changes
 	 */
-	public readonly onDidChangeLinkedToFile = this.#onDidChangeLinkedToFile.event;
+	public readonly onDidChangeLinkedToFile =
+		this.#onDidChangeLinkedToFile.event;
 
 	readonly #linkedToFile = new ResourceMap<{
 		/**
@@ -518,11 +666,20 @@ class FileLinkState extends Disposable {
 	/**
 	 * Set the known links in a markdown document, adding and removing file watchers as needed
 	 */
-	updateLinksForDocument(document: URI, links: readonly MdLink[], statCache: ResourceMap<{ readonly exists: boolean }>) {
+	updateLinksForDocument(
+		document: URI,
+		links: readonly MdLink[],
+		statCache: ResourceMap<{ readonly exists: boolean }>,
+	) {
 		const linkedToResource = new Set<{ path: URI; exists: boolean }>(
 			links
-				.filter(link => link.href.kind === HrefKind.Internal)
-				.map(link => ({ path: (link.href as InternalHref).path, exists: !!(statCache.get((link.href as InternalHref).path)?.exists) })));
+				.filter((link) => link.href.kind === HrefKind.Internal)
+				.map((link) => ({
+					path: (link.href as InternalHref).path,
+					exists: !!statCache.get((link.href as InternalHref).path)
+						?.exists,
+				})),
+		);
 
 		// First decrement watcher counter for previous document state
 		for (const entry of this.#linkedToFile.values()) {
@@ -536,7 +693,7 @@ class FileLinkState extends Disposable {
 				entry = {
 					watcher: this.#startWatching(path),
 					documents: new ResourceMap(),
-					exists
+					exists,
 				};
 				this.#linkedToFile.set(path, entry);
 			}
@@ -567,19 +724,27 @@ class FileLinkState extends Disposable {
 
 	#startWatching(path: URI): IDisposable {
 		const watcher = this.#workspace.watchFile(path, { ignoreChange: true });
-		const deleteReg = watcher.onDidDelete((resource: URI) => this.#onLinkedResourceChanged(resource, false));
-		const createReg = watcher.onDidCreate((resource: URI) => this.#onLinkedResourceChanged(resource, true));
+		const deleteReg = watcher.onDidDelete((resource: URI) =>
+			this.#onLinkedResourceChanged(resource, false),
+		);
+		const createReg = watcher.onDidCreate((resource: URI) =>
+			this.#onLinkedResourceChanged(resource, true),
+		);
 		return {
 			dispose: () => {
 				watcher.dispose();
 				deleteReg.dispose();
 				createReg.dispose();
-			}
+			},
 		};
 	}
 
 	#onLinkedResourceChanged(resource: URI, exists: boolean) {
-		this.#logger.log(LogLevel.Trace, 'FileLinkState.onLinkedResourceChanged', { resource, exists });
+		this.#logger.log(
+			LogLevel.Trace,
+			"FileLinkState.onLinkedResourceChanged",
+			{ resource, exists },
+		);
 
 		const entry = this.#linkedToFile.get(resource);
 		if (entry) {
@@ -593,15 +758,19 @@ class FileLinkState extends Disposable {
 	}
 }
 
-export class DiagnosticsManager extends Disposable implements IPullDiagnosticsManager {
-
+export class DiagnosticsManager
+	extends Disposable
+	implements IPullDiagnosticsManager
+{
 	readonly #computer: DiagnosticComputer;
 	readonly #linkWatcher: FileLinkState;
 
-	readonly #onLinkedToFileChanged = this._register(new lsp.Emitter<{
-		readonly changedResource: URI;
-		readonly linkingResources: readonly URI[];
-	}>());
+	readonly #onLinkedToFileChanged = this._register(
+		new lsp.Emitter<{
+			readonly changedResource: URI;
+			readonly linkingResources: readonly URI[];
+		}>(),
+	);
 	public readonly onLinkedToFileChanged = this.#onLinkedToFileChanged.event;
 
 	constructor(
@@ -616,23 +785,34 @@ export class DiagnosticsManager extends Disposable implements IPullDiagnosticsMa
 		const linkWatcher = new FileLinkState(workspace, logger);
 		this.#linkWatcher = this._register(linkWatcher);
 
-		this._register(this.#linkWatcher.onDidChangeLinkedToFile(e => {
-			logger.log(LogLevel.Trace, 'DiagnosticsManager.onDidChangeLinkedToFile', { resource: e.changedResource });
+		this._register(
+			this.#linkWatcher.onDidChangeLinkedToFile((e) => {
+				logger.log(
+					LogLevel.Trace,
+					"DiagnosticsManager.onDidChangeLinkedToFile",
+					{ resource: e.changedResource },
+				);
 
-			this.#onLinkedToFileChanged.fire({
-				changedResource: e.changedResource,
-				linkingResources: Array.from(e.linkingFiles),
-			});
-		}));
+				this.#onLinkedToFileChanged.fire({
+					changedResource: e.changedResource,
+					linkingResources: Array.from(e.linkingFiles),
+				});
+			}),
+		);
 
 		const stateCachedWorkspace = new Proxy(workspace, {
 			get(target, p, receiver) {
-				if (p !== 'stat') {
+				if (p !== "stat") {
 					const value = Reflect.get(target, p, receiver);
-					return typeof value === 'function' ? value.bind(workspace) : value;
+					return typeof value === "function"
+						? value.bind(workspace)
+						: value;
 				}
 
-				return async function (this: any, resource: URI): Promise<FileStat | undefined> {
+				return async function (
+					this: any,
+					resource: URI,
+				): Promise<FileStat | undefined> {
 					const stat = linkWatcher.tryStatFileLink(resource);
 					if (stat) {
 						if (stat.exists) {
@@ -641,25 +821,44 @@ export class DiagnosticsManager extends Disposable implements IPullDiagnosticsMa
 							return undefined;
 						}
 					}
-					return workspace.stat.call(this === receiver ? target : this, resource);
+					return workspace.stat.call(
+						this === receiver ? target : this,
+						resource,
+					);
 				};
 			},
 		});
 
-		this.#computer = new DiagnosticComputer(configuration, stateCachedWorkspace, linkProvider, tocProvider, logger);
+		this.#computer = new DiagnosticComputer(
+			configuration,
+			stateCachedWorkspace,
+			linkProvider,
+			tocProvider,
+			logger,
+		);
 
-		this._register(workspace.onDidDeleteMarkdownDocument(uri => {
-			this.#linkWatcher.deleteDocument(uri);
-		}));
+		this._register(
+			workspace.onDidDeleteMarkdownDocument((uri) => {
+				this.#linkWatcher.deleteDocument(uri);
+			}),
+		);
 	}
 
-	public async computeDiagnostics(doc: ITextDocument, options: DiagnosticOptions, token: lsp.CancellationToken): Promise<lsp.Diagnostic[]> {
+	public async computeDiagnostics(
+		doc: ITextDocument,
+		options: DiagnosticOptions,
+		token: lsp.CancellationToken,
+	): Promise<lsp.Diagnostic[]> {
 		const results = await this.#computer.compute(doc, options, token);
 		if (token.isCancellationRequested) {
 			return [];
 		}
 
-		this.#linkWatcher.updateLinksForDocument(getDocUri(doc), results.links, results.statCache);
+		this.#linkWatcher.updateLinksForDocument(
+			getDocUri(doc),
+			results.links,
+			results.statCache,
+		);
 		return results.diagnostics;
 	}
 

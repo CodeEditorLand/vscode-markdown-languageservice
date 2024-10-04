@@ -3,9 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as lsp from 'vscode-languageserver-protocol';
-import { URI } from 'vscode-uri';
-import { maxLspUInt } from '../util/number';
+import * as lsp from "vscode-languageserver-protocol";
+import { URI } from "vscode-uri";
+
+import { maxLspUInt } from "../util/number";
 
 /**
  * A document in the workspace.
@@ -17,12 +18,12 @@ export interface ITextDocument {
 	readonly uri: string;
 
 	/**
-	 * The uri of the document, as a URI. 
+	 * The uri of the document, as a URI.
 	 */
 	readonly $uri?: URI;
-	
+
 	/**
-	 * Version number of the document's content. 
+	 * Version number of the document's content.
 	 */
 	readonly version: number;
 
@@ -33,7 +34,7 @@ export interface ITextDocument {
 
 	/**
 	 * Get text contents of the document.
-	 * 
+	 *
 	 * @param range Optional range to get the text of. If not specified, the entire document content is returned.
 	 */
 	getText(range?: lsp.Range): string;
@@ -50,7 +51,9 @@ export interface ITextDocument {
 }
 
 export function getLine(doc: ITextDocument, line: number): string {
-	return doc.getText(lsp.Range.create(line, 0, line, maxLspUInt)).replace(/\r?\n$/, '');
+	return doc
+		.getText(lsp.Range.create(line, 0, line, maxLspUInt))
+		.replace(/\r?\n$/, "");
 }
 
 export function getDocUri(doc: ITextDocument): URI {
