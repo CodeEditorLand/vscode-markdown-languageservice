@@ -2,14 +2,11 @@
  * Demonstrates how to use vscode-markdown-languageservice to process a markdown file.
  */
 // @ts-check
-const mdls = require(".");
-const MarkdownIt = require("markdown-it");
-const { URI } = require("vscode-uri");
-const {
-	CancellationTokenSource,
-	Emitter,
-} = require("vscode-languageserver-protocol");
-const { TextDocument } = require("vscode-languageserver-textdocument");
+const mdls = require('.');
+const MarkdownIt = require('markdown-it');
+const { URI } = require('vscode-uri');
+const { CancellationTokenSource, Emitter } = require('vscode-languageserver-protocol');
+const { TextDocument } = require('vscode-languageserver-textdocument');
 
 // First we need to create the services that the markdown language service depends on.
 // This allows vscode-markdown-languageservice to work with as many use cases as possible.
@@ -18,33 +15,32 @@ const { TextDocument } = require("vscode-languageserver-textdocument");
 const mdIt = MarkdownIt({ html: true });
 
 /** @type {mdls.IMdParser} */
-const parser = new (class {
+const parser = new class {
 	slugifier = mdls.githubSlugifier;
 
 	async tokenize(document) {
 		return mdIt.parse(document.getText(), {});
 	}
-})();
+};
 
 // Create a virtual document that holds our file content
 const myDocument = TextDocument.create(
-	URI.file("/path/to/file.md").toString(), // file path
-	"markdown", // file language
+	URI.file('/path/to/file.md').toString(), // file path
+	'markdown', // file language
 	1, // version
-	[
-		// File contents
-		"# Hello",
-		"from **Markdown**",
-		"",
-		"## World!",
-	].join("\n"),
+	[ // File contents
+		'# Hello',
+		'from **Markdown**',
+		'',
+		'## World!',
+	].join('\n')
 );
 
 // Create a simple virtual workspace. This is required as many markdown language features
 // operate across files.
 
 /** @type {mdls.IWorkspace} */
-const workspace = new (class {
+const workspace = new class {
 	/** @returns {readonly URI[]} */
 	get workspaceFolders() {
 		return [];
@@ -60,7 +56,7 @@ const workspace = new (class {
 	}
 
 	/** @returns {Promise<mdls.ITextDocument | undefined>} */
-	async openMarkdownDocument(/** @type {URI} */ resource) {
+	async openMarkdownDocument(/** @type {URI} */resource) {
 		if (resource.toString() === myDocument.uri) {
 			return myDocument;
 		}
@@ -75,10 +71,11 @@ const workspace = new (class {
 		return undefined;
 	}
 
-	async readDirectory(/** @type {URI} */ resource) {
+	async readDirectory(/** @type {URI} */resource) {
 		// Not implemented
 		return [];
 	}
+
 
 	/** @type {Emitter<mdls.ITextDocument>} */
 	#onDidChangeMarkdownDocument = new Emitter();
@@ -91,7 +88,7 @@ const workspace = new (class {
 	/** @type {Emitter<URI>} */
 	#onDidDeleteMarkdownDocument = new Emitter();
 	onDidDeleteMarkdownDocument = this.#onDidDeleteMarkdownDocument.event;
-})();
+};
 
 /** @type { mdls.ILogger} */
 const consoleLogger = {
@@ -103,20 +100,12 @@ const consoleLogger = {
 async function main() {
 	// Create an instance of the language service the services we just created.
 	// You should do this once and then re-use the language service object for subsequent calls.
-	const languageService = mdls.createLanguageService({
-		workspace,
-		parser,
-		logger: consoleLogger,
-	});
+	const languageService = mdls.createLanguageService({ workspace, parser, logger: consoleLogger });
 
 	// Request document symbols from the language service
 	const cts = new CancellationTokenSource();
 	try {
-		const symbols = await languageService.getDocumentSymbols(
-			myDocument,
-			{ includeLinkDefinitions: true },
-			cts.token,
-		);
+		const symbols = await languageService.getDocumentSymbols(myDocument, { includeLinkDefinitions: true }, cts.token);
 		console.log(JSON.stringify(symbols, null, 2));
 	} finally {
 		cts.dispose();
