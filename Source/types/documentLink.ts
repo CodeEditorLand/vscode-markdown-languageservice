@@ -2,122 +2,121 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import * as lsp from 'vscode-languageserver-protocol';
-import { URI } from 'vscode-uri';
+import * as lsp from "vscode-languageserver-protocol";
+import { URI } from "vscode-uri";
 
 export enum HrefKind {
-    External,
-    Internal,
-    Reference
+	External,
+	Internal,
+	Reference,
 }
 
 export interface ExternalHref {
-    readonly kind: HrefKind.External;
-    readonly uri: URI;
+	readonly kind: HrefKind.External;
+	readonly uri: URI;
 }
 
 export interface InternalHref {
-    readonly kind: HrefKind.Internal;
-    readonly path: URI;
-    readonly fragment: string;
+	readonly kind: HrefKind.Internal;
+	readonly path: URI;
+	readonly fragment: string;
 }
 
 export interface ReferenceHref {
-    readonly kind: HrefKind.Reference;
-    readonly ref: string;
+	readonly kind: HrefKind.Reference;
+	readonly ref: string;
 }
 
 export type LinkHref = ExternalHref | InternalHref | ReferenceHref;
 
 export interface MdLinkSource {
-    /**
-     * The full range of the link.
-     */
-    readonly range: lsp.Range;
+	/**
+	 * The full range of the link.
+	 */
+	readonly range: lsp.Range;
 
-    /**
-     * The file where the link is defined.
-     */
-    readonly resource: URI;
+	/**
+	 * The file where the link is defined.
+	 */
+	readonly resource: URI;
 
-    /**
-     * The range of the entire link target.
-     *
-     * This includes the opening `(`/`[` and closing `)`/`]`.
-     *
-     * For `[boris](/cat.md#siberian "title")` this would be the range of `(/cat.md#siberian "title")`
-     */
-    readonly targetRange: lsp.Range;
+	/**
+	 * The range of the entire link target.
+	 *
+	 * This includes the opening `(`/`[` and closing `)`/`]`.
+	 *
+	 * For `[boris](/cat.md#siberian "title")` this would be the range of `(/cat.md#siberian "title")`
+	 */
+	readonly targetRange: lsp.Range;
 
-    /**
-     * The original text of the link destination in code.
-     *
-     * For `[boris](/cat.md#siberian "title")` this would be `/cat.md#siberian`
-     *
-     */
-    readonly hrefText: string;
+	/**
+	 * The original text of the link destination in code.
+	 *
+	 * For `[boris](/cat.md#siberian "title")` this would be `/cat.md#siberian`
+	 *
+	 */
+	readonly hrefText: string;
 
-    /**
-     * The original text of just the link's path in code.
-     *
-     * For `[boris](/cat.md#siberian "title")` this would be `/cat.md`
-     */
-    readonly pathText: string;
+	/**
+	 * The original text of just the link's path in code.
+	 *
+	 * For `[boris](/cat.md#siberian "title")` this would be `/cat.md`
+	 */
+	readonly pathText: string;
 
-    /**
-     * The range of the path in this link.
-     *
-     * Does not include whitespace or the link title.
-     *
-     * For `[boris](/cat.md#siberian "title")` this would be the range of `/cat.md#siberian`
-     */
-    readonly hrefRange: lsp.Range;
+	/**
+	 * The range of the path in this link.
+	 *
+	 * Does not include whitespace or the link title.
+	 *
+	 * For `[boris](/cat.md#siberian "title")` this would be the range of `/cat.md#siberian`
+	 */
+	readonly hrefRange: lsp.Range;
 
-    /**
-     * The range of the fragment within the path.
-     *
-     * For `[boris](/cat.md#siberian "title")` this would be the range of `#siberian`
-     */
-    readonly fragmentRange: lsp.Range | undefined;
+	/**
+	 * The range of the fragment within the path.
+	 *
+	 * For `[boris](/cat.md#siberian "title")` this would be the range of `#siberian`
+	 */
+	readonly fragmentRange: lsp.Range | undefined;
 
-    readonly isAngleBracketLink: boolean;
+	readonly isAngleBracketLink: boolean;
 }
 
 export enum MdLinkKind {
-    /** Standard Markdown link syntax: `[text][ref]` or `[text](http://example.com)` */
-    Link = 1,
+	/** Standard Markdown link syntax: `[text][ref]` or `[text](http://example.com)` */
+	Link = 1,
 
-    /** Link definition: `[def]: http://example.com` */
-    Definition = 2,
+	/** Link definition: `[def]: http://example.com` */
+	Definition = 2,
 
-    /** Auto link: `<http://example.com>` */
-    AutoLink = 3,
+	/** Auto link: `<http://example.com>` */
+	AutoLink = 3,
 }
 
 export interface MdInlineLink<HrefType = LinkHref> {
-    readonly kind: MdLinkKind.Link;
-    readonly source: MdLinkSource;
-    readonly href: HrefType;
+	readonly kind: MdLinkKind.Link;
+	readonly source: MdLinkSource;
+	readonly href: HrefType;
 }
 
 export interface MdLinkDefinition {
-    readonly kind: MdLinkKind.Definition;
-    readonly source: MdLinkSource;
-    readonly ref: {
-        readonly range: lsp.Range;
-        readonly text: string;
-    };
-    readonly href: ExternalHref | InternalHref;
+	readonly kind: MdLinkKind.Definition;
+	readonly source: MdLinkSource;
+	readonly ref: {
+		readonly range: lsp.Range;
+		readonly text: string;
+	};
+	readonly href: ExternalHref | InternalHref;
 }
 
 export interface MdAutoLink {
-    readonly kind: MdLinkKind.AutoLink;
-    readonly source: MdLinkSource;
-    readonly href: ExternalHref;
+	readonly kind: MdLinkKind.AutoLink;
+	readonly source: MdLinkSource;
+	readonly href: ExternalHref;
 }
 
 export type MdLink = MdInlineLink | MdLinkDefinition | MdAutoLink;
-
 
 /**
  * A map that lets you look up definitions by reference name.
@@ -146,7 +145,7 @@ export class LinkDefinitionSet implements Iterable<MdLinkDefinition> {
 
 /**
  * A store of link reference names.
- * 
+ *
  * Correctly normalizes reference names.
  */
 export class ReferenceLinkMap<T> {

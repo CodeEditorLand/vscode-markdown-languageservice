@@ -6,8 +6,8 @@
  * Map of html tags to attributes that contain links.
  */
 export const htmlTagPathAttrs = new Map([
-	['IMG', ['src']],
-	['VIDEO', ['src', 'placeholder']],
-	['SOURCE', ['src']],
-	['A', ['href']],
+	["IMG", ["src"]],
+	["VIDEO", ["src", "placeholder"]],
+	["SOURCE", ["src"]],
+	["A", ["href"]],
 ]);

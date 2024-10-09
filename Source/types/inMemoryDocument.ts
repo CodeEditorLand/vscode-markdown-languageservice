@@ -3,20 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as lsp from 'vscode-languageserver-protocol';
-import { TextDocument } from 'vscode-languageserver-textdocument';
-import { URI } from 'vscode-uri';
-import { ITextDocument } from './textDocument';
+import * as lsp from "vscode-languageserver-protocol";
+import { TextDocument } from "vscode-languageserver-textdocument";
+import { URI } from "vscode-uri";
+
+import { ITextDocument } from "./textDocument";
 
 /**
  * Represents a temporary version of a document.
- * 
+ *
  * This indicates that the document should not be cached or reuse cached results.
  */
 export const tempDocVersion = -1;
 
 export class InMemoryDocument implements ITextDocument {
-
 	#doc: TextDocument;
 
 	public readonly $uri: URI;
@@ -30,7 +30,12 @@ export class InMemoryDocument implements ITextDocument {
 		this.$uri = uri;
 		this.uri = uri.toString();
 
-		this.#doc = TextDocument.create(this.uri, 'markdown', version, contents);
+		this.#doc = TextDocument.create(
+			this.uri,
+			"markdown",
+			version,
+			contents,
+		);
 	}
 
 	get lineCount(): number {
@@ -55,7 +60,9 @@ export class InMemoryDocument implements ITextDocument {
 	}
 
 	applyEdits(textEdits: readonly lsp.TextEdit[]): this {
-		this.#update(textEdits.map(x => ({ range: x.range, text: x.newText })));
+		this.#update(
+			textEdits.map((x) => ({ range: x.range, text: x.newText })),
+		);
 		return this;
 	}
 

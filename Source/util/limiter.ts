@@ -20,7 +20,6 @@ interface ITask<T> {
  * Taken from 'src/vs/base/common/async.ts'
  */
 export class Limiter<T> {
-
 	#size = 0;
 	#runningPromises: number;
 	readonly #maxDegreeOfParalellism: number;
@@ -46,13 +45,19 @@ export class Limiter<T> {
 	}
 
 	#consume(): void {
-		while (this.#outstandingPromises.length && this.#runningPromises < this.#maxDegreeOfParalellism) {
+		while (
+			this.#outstandingPromises.length &&
+			this.#runningPromises < this.#maxDegreeOfParalellism
+		) {
 			const iLimitedTask = this.#outstandingPromises.shift()!;
 			this.#runningPromises++;
 
 			const promise = iLimitedTask.factory();
 			promise.then(iLimitedTask.c, iLimitedTask.e);
-			promise.then(() => this.#consumed(), () => this.#consumed());
+			promise.then(
+				() => this.#consumed(),
+				() => this.#consumed(),
+			);
 		}
 	}
 

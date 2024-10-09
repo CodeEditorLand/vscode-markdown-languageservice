@@ -3,13 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as lsp from 'vscode-languageserver-protocol';
-import { URI } from 'vscode-uri';
+import * as lsp from "vscode-languageserver-protocol";
+import { URI } from "vscode-uri";
 
 export class WorkspaceEditBuilder {
-
-	readonly #changes: { [uri: lsp.DocumentUri]: lsp.TextEdit[]; } = {};
-	readonly #documentChanges: Array<lsp.CreateFile | lsp.RenameFile | lsp.DeleteFile> = [];
+	readonly #changes: { [uri: lsp.DocumentUri]: lsp.TextEdit[] } = {};
+	readonly #documentChanges: Array<
+		lsp.CreateFile | lsp.RenameFile | lsp.DeleteFile
+	> = [];
 
 	replace(resource: URI, range: lsp.Range, newText: string): void {
 		this.#addEdit(resource, lsp.TextEdit.replace(range, newText));
@@ -32,9 +33,14 @@ export class WorkspaceEditBuilder {
 
 	getEdit(): lsp.WorkspaceEdit {
 		// We need to convert changes into `documentChanges` or else they get dropped
-		const textualChanges = Object.entries(this.#changes).map(([uri, edits]): lsp.TextDocumentEdit => {
-			return lsp.TextDocumentEdit.create({ uri, version: null }, edits);
-		});
+		const textualChanges = Object.entries(this.#changes).map(
+			([uri, edits]): lsp.TextDocumentEdit => {
+				return lsp.TextDocumentEdit.create(
+					{ uri, version: null },
+					edits,
+				);
+			},
+		);
 
 		return {
 			documentChanges: [...textualChanges, ...this.#documentChanges],
@@ -42,6 +48,11 @@ export class WorkspaceEditBuilder {
 	}
 
 	renameFile(targetUri: URI, resolvedNewFilePath: URI) {
-		this.#documentChanges.push(lsp.RenameFile.create(targetUri.toString(), resolvedNewFilePath.toString()));
+		this.#documentChanges.push(
+			lsp.RenameFile.create(
+				targetUri.toString(),
+				resolvedNewFilePath.toString(),
+			),
+		);
 	}
 }
