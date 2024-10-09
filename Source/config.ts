@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as picomatch from 'picomatch';
-import { URI } from 'vscode-uri';
+import * as picomatch from "picomatch";
+import { URI } from "vscode-uri";
 
 /**
  * Preferred style for file paths to {@link markdownFileExtensions markdown files}.
@@ -13,17 +13,17 @@ export enum PreferredMdPathExtensionStyle {
 	/**
 	 * Try to maintain the existing of the path.
 	 */
-	auto = 'auto',
+	auto = "auto",
 
 	/**
 	 * Include the file extension when possible.
 	 */
-	includeExtension = 'includeExtension',
+	includeExtension = "includeExtension",
 
 	/**
 	 * Drop the file extension when possible.
 	 */
-	removeExtension = 'removeExtension',
+	removeExtension = "removeExtension",
 }
 
 export interface LsConfiguration {
@@ -53,32 +53,31 @@ export interface LsConfiguration {
 
 	/**
 	 * Preferred style for file paths to {@link markdownFileExtensions markdown files}.
-	 * 
+	 *
 	 * This is used for paths added by the language service, such as for path completions and on file renames.
 	 */
 	readonly preferredMdPathExtensionStyle?: PreferredMdPathExtensionStyle;
 }
 
-export const defaultMarkdownFileExtension = 'md';
+export const defaultMarkdownFileExtension = "md";
 
 const defaultConfig: LsConfiguration = {
 	markdownFileExtensions: [defaultMarkdownFileExtension],
 	knownLinkedToFileExtensions: [
-		'jpg',
-		'jpeg',
-		'png',
-		'gif',
-		'webp',
-		'bmp',
-		'tiff',
+		"jpg",
+		"jpeg",
+		"png",
+		"gif",
+		"webp",
+		"bmp",
+		"tiff",
 	],
-	excludePaths: [
-		'**/.*',
-		'**/node_modules/**',
-	]
+	excludePaths: ["**/.*", "**/node_modules/**"],
 };
 
-export function getLsConfiguration(overrides: Partial<LsConfiguration>): LsConfiguration {
+export function getLsConfiguration(
+	overrides: Partial<LsConfiguration>,
+): LsConfiguration {
 	return new Proxy<LsConfiguration>(Object.create(null), {
 		get(_target, p: keyof LsConfiguration, _receiver) {
 			return p in overrides ? overrides[p] : defaultConfig[p];
@@ -86,6 +85,11 @@ export function getLsConfiguration(overrides: Partial<LsConfiguration>): LsConfi
 	});
 }
 
-export function isExcludedPath(configuration: LsConfiguration, uri: URI): boolean {
-	return configuration.excludePaths.some(excludePath => picomatch.isMatch(uri.path, excludePath));
+export function isExcludedPath(
+	configuration: LsConfiguration,
+	uri: URI,
+): boolean {
+	return configuration.excludePaths.some((excludePath) =>
+		picomatch.isMatch(uri.path, excludePath),
+	);
 }
