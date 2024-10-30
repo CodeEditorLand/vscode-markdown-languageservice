@@ -191,25 +191,27 @@ const linkPattern = new RegExp(
  */
 const referenceLinkPattern = new RegExp(
 	r`(?<![\]\\])` + // Must not start with another bracket
-		r`(?:` +
-		// [text][ref] or [text][]
-		/**/ r`(?<prefix>` + // Start link prefix
-		/****/ r`!?` + // Optional image ref
-		/****/ r`\[(?<text>(?:` + // Link text
-		/******/ r`\\.|` + // escaped character, or...
-		/******/ r`[^\[\]\\]|` + // non bracket char, or...
-		/******/ r`\[[^\[\]]*\]` + // matched bracket pair
-		/****/ `)*)\]` + // end link  text
-		/****/ r`\[\s*` + // Start of link def
-		/**/ r`)` + // end link prefix
-		/**/ r`(?<ref>(?:[^\\\]]|\\.)*?)\]` + // link def
-		/**/ r`|` +
-		// [shorthand]
-		/****/ r`\[\s*(?<shorthand>(?:\\.|[^\[\]\\])+?)\s*\]` +
-		r`)` +
-		r`(?![\(])`, // Must not be followed by a paren to avoid matching normal links
-	"gm",
-);
+	r`(?:` +
+
+	// [text][ref] or [text][]
+	/**/r`(?<prefix>` + // Start link prefix
+	/****/r`!?` + // Optional image ref
+	/****/r`\[(?<text>(?:` +// Link text
+	/******/r`\\.|` + // escaped character, or...
+	/******/r`[^\[\]\\]|` + // non bracket char, or...
+	/******/r`\[[^\[\]]*\]` + // matched bracket pair
+	/****/`)*)\]` + // end link  text
+	/****/r`\[\s*` + // Start of link def
+	/**/r`)` + // end link prefix
+	/**/r`(?<ref>(?:[^\\\]]|\\.)*?)\]` + // link def
+
+	/**/r`|` +
+
+	// [shorthand] but not [!shorthand]
+	/****/r`\[(?!\!)\s*(?<shorthand>(?:\\.|[^\[\]\\])+?)\s*\]` +
+	r`)` +
+	r`(?![\(])`,  // Must not be followed by a paren to avoid matching normal links
+	'gm');
 
 /**
  * Matches `<http://example.com>`
@@ -968,7 +970,7 @@ export class MdLinkProvider extends Disposable {
 
 		if (doc) {
 			const toc = await this.#tocProvider.getForContainingDoc(doc, token);
-			const entry = toc.lookup(linkFragment);
+			const entry = toc.lookupByFragment(linkFragment);
 			if (entry) {
 				return {
 					kind: "file",

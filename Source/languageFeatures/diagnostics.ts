@@ -3,42 +3,23 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as l10n from "@vscode/l10n";
-import * as picomatch from "picomatch";
-import * as lsp from "vscode-languageserver-protocol";
-import { URI } from "vscode-uri";
-
-import { LsConfiguration } from "../config";
-import { ILogger, LogLevel } from "../logging";
-import { MdTableOfContentsProvider } from "../tableOfContents";
-import {
-	HrefKind,
-	InternalHref,
-	LinkDefinitionSet,
-	MdLink,
-	MdLinkDefinition,
-	MdLinkKind,
-	MdLinkSource,
-	ReferenceLinkMap,
-} from "../types/documentLink";
-import { translatePosition } from "../types/position";
-import { modifyRange } from "../types/range";
-import { getDocUri, ITextDocument } from "../types/textDocument";
-import { Disposable, IDisposable } from "../util/dispose";
-import { Limiter } from "../util/limiter";
-import {
-	isSameResource,
-	looksLikeMarkdownUri,
-	parseLocationInfoFromFragment,
-} from "../util/path";
-import { ResourceMap } from "../util/resourceMap";
-import {
-	FileStat,
-	IWorkspace,
-	IWorkspaceWithWatching,
-	statLinkToMarkdownFile,
-} from "../workspace";
-import { MdLinkProvider } from "./documentLinks";
+import * as l10n from '@vscode/l10n';
+import * as picomatch from 'picomatch';
+import * as lsp from 'vscode-languageserver-protocol';
+import { URI } from 'vscode-uri';
+import { LsConfiguration } from '../config';
+import { ILogger, LogLevel } from '../logging';
+import { MdTableOfContentsProvider, TableOfContents } from '../tableOfContents';
+import { HrefKind, InternalHref, LinkDefinitionSet, MdLink, MdLinkDefinition, MdLinkKind, MdLinkSource, ReferenceLinkMap } from '../types/documentLink';
+import { translatePosition } from '../types/position';
+import { modifyRange } from '../types/range';
+import { getDocUri, ITextDocument } from '../types/textDocument';
+import { Disposable, IDisposable } from '../util/dispose';
+import { Limiter } from '../util/limiter';
+import { isSameResource, looksLikeMarkdownUri, parseLocationInfoFromFragment } from '../util/path';
+import { ResourceMap } from '../util/resourceMap';
+import { FileStat, IWorkspace, IWorkspaceWithWatching, statLinkToMarkdownFile } from '../workspace';
+import { MdLinkProvider } from './documentLinks';
 
 /**
  * The severity at which diagnostics are reported
@@ -271,12 +252,11 @@ export class DiagnosticComputer {
 
 		const diagnostics: lsp.Diagnostic[] = [];
 		for (const link of links) {
-			if (
-				link.href.kind === HrefKind.Internal &&
-				link.source.hrefText.startsWith("#") &&
-				isSameResource(link.href.path, getDocUri(doc)) &&
-				link.href.fragment &&
-				!toc.lookup(link.href.fragment)
+			if (link.href.kind === HrefKind.Internal
+				&& link.source.hrefText.startsWith('#')
+				&& isSameResource(link.href.path, getDocUri(doc))
+				&& link.href.fragment
+				&& !tocLookupByLink(toc, { source: link.source, fragment: link.href.fragment })
 			) {
 				// Don't validate line number links
 				if (parseLocationInfoFromFragment(link.href.fragment)) {
@@ -469,14 +449,8 @@ export class DiagnosticComputer {
 							return;
 						}
 
-						if (!resolvedHrefPath) {
-							for (const link of links) {
-								if (
-									!this.#isIgnoredLink(
-										options,
-										link.source.pathText,
-									)
-								) {
+								if (!(toc && tocLookupByLink(toc, link)) && !this.#isIgnoredLink(options, link.source.pathText) && !this.#isIgnoredLink(options, link.source.hrefText)) {
+									const range = (link.source.fragmentRange && modifyRange(link.source.fragmentRange, translatePosition(link.source.fragmentRange.start, { characterDelta: -1 }), undefined)) ?? link.source.hrefRange;
 									diagnostics.push({
 										code: DiagnosticCode.link_noSuchFile,
 										message: l10n.t(
@@ -865,4 +839,8 @@ export class DiagnosticsManager
 	public disposeDocumentResources(uri: URI): void {
 		this.#linkWatcher.deleteDocument(uri);
 	}
+}
+
+function tocLookupByLink(toc: TableOfContents, link: { readonly source: MdLinkSource; readonly fragment: string; }) {
+	return link.source.isAngleBracketLink ? toc.lookupByHeading(link.fragment) : toc.lookupByFragment(link.fragment);
 }

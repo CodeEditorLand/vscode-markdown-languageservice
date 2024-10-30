@@ -249,9 +249,14 @@ export class TableOfContents {
 		this.#slugifier = slugifier;
 	}
 
-	public lookup(fragment: string): TocEntry | undefined {
-		const slug = this.#slugifier.fromFragment(fragment);
-		return this.entries.find((entry) => entry.slug.equals(slug));
+	public lookupByFragment(fragmentText: string): TocEntry | undefined {
+		const slug = this.#slugifier.fromFragment(fragmentText);
+		return this.entries.find(entry => entry.slug.equals(slug));
+	}
+
+	public lookupByHeading(text: string): TocEntry | undefined {
+		const slug = this.#slugifier.fromHeading(text);
+		return this.entries.find(entry => entry.slug.equals(slug));
 	}
 }
 
