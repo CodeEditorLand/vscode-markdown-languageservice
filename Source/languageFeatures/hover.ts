@@ -25,6 +25,7 @@ export class MdHoverProvider {
 		token: lsp.CancellationToken,
 	): Promise<lsp.Hover | undefined> {
 		const links = await this.#linkProvider.getLinks(document);
+
 		if (token.isCancellationRequested) {
 			return;
 		}
@@ -32,11 +33,13 @@ export class MdHoverProvider {
 		const link = links.links.find((link) =>
 			rangeContains(link.source.hrefRange, pos),
 		);
+
 		if (!link || link.href.kind === HrefKind.Reference) {
 			return;
 		}
 
 		const contents = this.#getHoverContents(link);
+
 		return (
 			contents && {
 				contents,
@@ -54,8 +57,11 @@ export class MdHoverProvider {
 			link.href.kind === HrefKind.External
 				? link.href.uri
 				: link.href.path;
+
 		const mediaType = getMediaPreviewType(uri);
+
 		const maxWidth = 300;
+
 		switch (mediaType) {
 			case MediaType.Image: {
 				return {

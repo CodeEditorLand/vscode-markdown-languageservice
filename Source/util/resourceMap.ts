@@ -20,6 +20,7 @@ export class ResourceMap<T> {
 
 	public set(uri: URI, value: T): this {
 		this.#map.set(this.#toKey(uri), { uri, value });
+
 		return this;
 	}
 

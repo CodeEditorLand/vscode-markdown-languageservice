@@ -374,6 +374,7 @@ export function createLanguageService(
 	init: LanguageServiceInitialization,
 ): IMdLanguageService {
 	const config = getLsConfiguration(init);
+
 	const logger = init.logger;
 
 	const tocProvider = new MdTableOfContentsProvider(
@@ -381,16 +382,19 @@ export function createLanguageService(
 		init.workspace,
 		logger,
 	);
+
 	const smartSelectProvider = new MdSelectionRangeProvider(
 		init.parser,
 		tocProvider,
 		logger,
 	);
+
 	const foldingProvider = new MdFoldingProvider(
 		init.parser,
 		tocProvider,
 		logger,
 	);
+
 	const linkProvider = new MdLinkProvider(
 		config,
 		init.parser,
@@ -398,6 +402,7 @@ export function createLanguageService(
 		tocProvider,
 		logger,
 	);
+
 	const pathCompletionProvider = new MdPathCompletionProvider(
 		config,
 		init.workspace,
@@ -405,7 +410,9 @@ export function createLanguageService(
 		linkProvider,
 		tocProvider,
 	);
+
 	const linkCache = createWorkspaceLinkCache(init.parser, init.workspace);
+
 	const referencesProvider = new MdReferencesProvider(
 		config,
 		init.parser,
@@ -414,12 +421,14 @@ export function createLanguageService(
 		linkCache,
 		logger,
 	);
+
 	const definitionsProvider = new MdDefinitionProvider(
 		config,
 		init.workspace,
 		tocProvider,
 		linkCache,
 	);
+
 	const renameProvider = new MdRenameProvider(
 		config,
 		init.workspace,
@@ -429,12 +438,14 @@ export function createLanguageService(
 		init.parser.slugifier,
 		logger,
 	);
+
 	const fileRenameProvider = new MdFileRenameProvider(
 		config,
 		init.workspace,
 		linkCache,
 		referencesProvider,
 	);
+
 	const diagnosticsComputer = new DiagnosticComputer(
 		config,
 		init.workspace,
@@ -442,31 +453,38 @@ export function createLanguageService(
 		tocProvider,
 		logger,
 	);
+
 	const docSymbolProvider = new MdDocumentSymbolProvider(
 		tocProvider,
 		linkProvider,
 		logger,
 	);
+
 	const workspaceSymbolProvider = new MdWorkspaceSymbolProvider(
 		init.workspace,
 		docSymbolProvider,
 	);
+
 	const organizeLinkDefinitions = new MdOrganizeLinkDefinitionProvider(
 		linkProvider,
 	);
+
 	const documentHighlightProvider = new MdDocumentHighlightProvider(
 		config,
 		tocProvider,
 		linkProvider,
 	);
+
 	const rewritePastedLinksProvider = new MdUpdatePastedLinksProvider(
 		config,
 		linkProvider,
 	);
+
 	const hoverProvider = new MdHoverProvider(linkProvider);
 
 	const extractCodeActionProvider =
 		new MdExtractLinkDefinitionCodeActionProvider(linkProvider);
+
 	const removeLinkDefinitionActionProvider =
 		new MdRemoveLinkDefinitionCodeActionProvider();
 

@@ -199,6 +199,7 @@ export async function openLinkToMarkdownFile(
 ): Promise<ITextDocument | undefined> {
 	try {
 		const doc = await workspace.openMarkdownDocument(resource);
+
 		if (doc) {
 			return doc;
 		}
@@ -207,6 +208,7 @@ export async function openLinkToMarkdownFile(
 	}
 
 	const dotMdResource = tryAppendMarkdownFileExtension(config, resource);
+
 	if (dotMdResource) {
 		return workspace.openMarkdownDocument(dotMdResource);
 	}
@@ -228,6 +230,7 @@ export async function statLinkToMarkdownFile(
 	const exists = async (uri: URI): Promise<boolean> => {
 		const result = await workspace.stat(uri);
 		out_statCache?.set(uri, { exists: !!result });
+
 		return !!result;
 	};
 
@@ -237,6 +240,7 @@ export async function statLinkToMarkdownFile(
 
 	// We don't think the file exists. See if we need to append `.md`
 	const dotMdResource = tryAppendMarkdownFileExtension(config, linkUri);
+
 	if (dotMdResource && (await exists(dotMdResource))) {
 		return dotMdResource;
 	}
@@ -249,6 +253,7 @@ export function tryAppendMarkdownFileExtension(
 	linkUri: URI,
 ): URI | undefined {
 	const ext = Utils.extname(linkUri).toLowerCase().replace(/^\./, "");
+
 	if (config.markdownFileExtensions.includes(ext)) {
 		return linkUri;
 	}

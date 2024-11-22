@@ -76,6 +76,7 @@ export class TableOfContents {
 		token: lsp.CancellationToken,
 	): Promise<TableOfContents> {
 		const entries = await this.#buildToc(parser, document, token);
+
 		return new TableOfContents(entries, parser.slugifier);
 	}
 
@@ -86,6 +87,7 @@ export class TableOfContents {
 		token: lsp.CancellationToken,
 	): Promise<TableOfContents> {
 		const context = workspace.getContainingDocument?.(getDocUri(document));
+
 		if (context) {
 			const entries = (
 				await Promise.all(
@@ -93,6 +95,7 @@ export class TableOfContents {
 						const doc = await workspace.openMarkdownDocument(
 							cell.uri,
 						);
+
 						if (!doc || token.isCancellationRequested) {
 							return [];
 						}
@@ -100,6 +103,7 @@ export class TableOfContents {
 					}),
 				)
 			).flat();
+
 			return new TableOfContents(entries, parser.slugifier);
 		}
 
@@ -114,7 +118,9 @@ export class TableOfContents {
 		const docUri = getDocUri(document);
 
 		const toc: TocEntry[] = [];
+
 		const tokens = await parser.tokenize(document);
+
 		if (token.isCancellationRequested) {
 			return [];
 		}
@@ -124,6 +130,7 @@ export class TableOfContents {
 		type HeaderInfo = { open: Token; body: Token[] };
 
 		const headers: HeaderInfo[] = [];
+
 		let currentHeader: HeaderInfo | undefined;
 
 		for (const token of tokens) {
@@ -131,14 +138,17 @@ export class TableOfContents {
 				case "heading_open": {
 					currentHeader = { open: token, body: [] };
 					headers.push(currentHeader);
+
 					break;
 				}
 				case "heading_close": {
 					currentHeader = undefined;
+
 					break;
 				}
 				default: {
 					currentHeader?.body.push(token);
+
 					break;
 				}
 			}
@@ -150,8 +160,11 @@ export class TableOfContents {
 			}
 
 			const lineNumber = open.map[0];
+
 			const line = getLine(document, lineNumber);
+
 			const bodyText = TableOfContents.#getHeaderTitleAsPlainText(body);
+
 			const slug = slugBuilder.add(bodyText);
 
 			const headerLocation: lsp.Location = {
@@ -183,13 +196,16 @@ export class TableOfContents {
 		// Get full range of section
 		return toc.map((entry, startIndex): TocEntry => {
 			let end: number | undefined = undefined;
+
 			for (let i = startIndex + 1; i < toc.length; ++i) {
 				if (toc[i].level <= entry.level) {
 					end = toc[i].line - 1;
+
 					break;
 				}
 			}
 			const endLine = end ?? document.lineCount - 1;
+
 			return {
 				...entry,
 				sectionLocation: {
@@ -226,6 +242,7 @@ export class TableOfContents {
 			case "emoji":
 			case "code_inline":
 				return token.content;
+
 			default:
 				return "";
 		}
@@ -251,11 +268,13 @@ export class TableOfContents {
 
 	public lookupByFragment(fragmentText: string): TocEntry | undefined {
 		const slug = this.#slugifier.fromFragment(fragmentText);
+
 		return this.entries.find(entry => entry.slug.equals(slug));
 	}
 
 	public lookupByHeading(text: string): TocEntry | undefined {
 		const slug = this.#slugifier.fromHeading(text);
+
 		return this.entries.find(entry => entry.slug.equals(slug));
 	}
 }
@@ -283,6 +302,7 @@ export class MdTableOfContentsProvider extends Disposable {
 						"TableOfContentsProvider.create",
 						{ document: doc.uri, version: doc.version },
 					);
+
 					return TableOfContents.create(parser, doc, token);
 				},
 			),

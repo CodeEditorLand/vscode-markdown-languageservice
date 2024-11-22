@@ -22,7 +22,9 @@ export class WorkspaceEditBuilder {
 
 	#addEdit(resource: URI, edit: lsp.TextEdit): void {
 		const resourceKey = resource.toString();
+
 		let edits = this.#changes![resourceKey];
+
 		if (!edits) {
 			edits = [];
 			this.#changes![resourceKey] = edits;

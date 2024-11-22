@@ -38,7 +38,9 @@ export function hasBalancedParens(linkText: string): boolean {
 	}
 
 	let previousChar = "";
+
 	let nestingCount = 0;
+
 	for (const char of linkText) {
 		if (char === "(" && previousChar !== "\\") {
 			nestingCount++;
@@ -66,6 +68,7 @@ export function removeNewUriExtIfNeeded(
 ) {
 	if (shouldRemoveNewUriExt(config, originalHref, newUri)) {
 		const editExt = Utils.extname(newUri);
+
 		return newUri.with({
 			path: newUri.path.slice(0, newUri.path.length - editExt.length),
 		});
@@ -109,6 +112,7 @@ export function resolveInternalDocumentLink(
 		workspace.getContainingDocument?.(sourceDocUri)?.uri ?? sourceDocUri;
 
 	let resourceUri: URI | undefined;
+
 	if (!tempUri.path) {
 		// Looks like a fragment only link
 		if (typeof tempUri.fragment !== "string") {
@@ -118,12 +122,14 @@ export function resolveInternalDocumentLink(
 		resourceUri = sourceDocUri;
 	} else if (tempUri.path[0] === "/") {
 		const root = getWorkspaceFolder(workspace, docUri);
+
 		if (root) {
 			resourceUri = Utils.joinPath(root, tempUri.path);
 		}
 	} else {
 		if (docUri.scheme === Schemes.untitled) {
 			const root = getWorkspaceFolder(workspace, docUri);
+
 			if (root) {
 				resourceUri = Utils.joinPath(root, tempUri.path);
 			}

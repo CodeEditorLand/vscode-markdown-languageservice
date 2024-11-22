@@ -32,5 +32,6 @@ const previewableMediaFileExtension = new Map<string, MediaType>([
 
 export function getMediaPreviewType(uri: URI): MediaType | undefined {
 	const ext = Utils.extname(uri).toLowerCase();
+
 	return previewableMediaFileExtension.get(ext);
 }

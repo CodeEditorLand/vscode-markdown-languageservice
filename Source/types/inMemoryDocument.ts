@@ -56,6 +56,7 @@ export class InMemoryDocument implements ITextDocument {
 
 	replaceContents(newContent: string): this {
 		this.#update([{ text: newContent }]);
+
 		return this;
 	}
 
@@ -63,6 +64,7 @@ export class InMemoryDocument implements ITextDocument {
 		this.#update(
 			textEdits.map((x) => ({ range: x.range, text: x.newText })),
 		);
+
 		return this;
 	}
 

@@ -45,11 +45,13 @@ function createHref(
 			return { kind: HrefKind.External, uri: URI.parse(tryDecodeUri(link)) };
 		} catch (e) {
 			console.warn(r`Failed to parse link ${link} in ${sourceDocUri.toString(true)}`);
+
 			return undefined;
 		}
 	}
 
 	const resolved = resolveInternalDocumentLink(sourceDocUri, link, workspace);
+
 	if (!resolved) {
 		return undefined;
 	}
@@ -71,9 +73,11 @@ function createMdLink(
 	workspace: IWorkspace,
 ): MdLink | undefined {
 	const isAngleBracketLink = rawLink.startsWith("<");
+
 	const link = stripAngleBrackets(rawLink);
 
 	let linkTarget: ExternalHref | InternalHref | undefined;
+
 	try {
 		linkTarget = createHref(getDocUri(document), link, workspace);
 	} catch {
@@ -84,7 +88,9 @@ function createMdLink(
 	}
 
 	const pre = targetText + preHrefText;
+
 	const linkStart = document.positionAt(matchIndex);
+
 	const linkEnd = translatePosition(linkStart, {
 		characterDelta: fullMatch.length,
 	});
@@ -92,14 +98,17 @@ function createMdLink(
 	const targetStart = translatePosition(linkStart, {
 		characterDelta: targetText.length,
 	});
+
 	const targetRange: lsp.Range = { start: targetStart, end: linkEnd };
 
 	const hrefStart = translatePosition(linkStart, {
 		characterDelta: pre.length + (isAngleBracketLink ? 1 : 0),
 	});
+
 	const hrefEnd = translatePosition(hrefStart, {
 		characterDelta: link.length,
 	});
+
 	const hrefRange: lsp.Range = { start: hrefStart, end: hrefEnd };
 
 	return {
@@ -123,6 +132,7 @@ function getFragmentRange(
 	end: lsp.Position,
 ): lsp.Range | undefined {
 	const index = text.indexOf("#");
+
 	if (index < 0) {
 		return undefined;
 	}
@@ -139,6 +149,7 @@ function getLinkSourceFragmentInfo(
 	linkEnd: lsp.Position,
 ): { fragmentRange: lsp.Range | undefined; pathText: string } {
 	const fragmentRange = getFragmentRange(link, linkStart, linkEnd);
+
 	return {
 		pathText: document.getText({
 			start: linkStart,
@@ -242,6 +253,7 @@ class InlineRanges {
 		// Register the range for all lines that it covers
 		for (let line = range.start.line; line <= range.end.line; line++) {
 			let ranges = this.#map.get(line);
+
 			if (!ranges) {
 				ranges = [];
 				this.#map.set(line, ranges);
@@ -252,6 +264,7 @@ class InlineRanges {
 
 	public concat(newRanges: Iterable<lsp.Range>): InlineRanges {
 		const result = new InlineRanges(this.#map);
+
 		for (const range of newRanges) {
 			result.add(range);
 		}
@@ -278,9 +291,12 @@ class NoLinkRanges {
 			.map((t) => ({ type: t.type, range: t.map as [number, number] }));
 
 		const inlineRanges = InlineRanges.create();
+
 		const text = document.getText();
+
 		for (const match of text.matchAll(inlineCodePattern)) {
 			const startOffset = match.index ?? 0;
+
 			const startPosition = document.positionAt(startOffset);
 			inlineRanges.add(
 				lsp.Range.create(
@@ -360,6 +376,7 @@ export class MdLinkComputer {
 		token: lsp.CancellationToken,
 	): Promise<MdLink[]> {
 		const tokens = await this.#tokenizer.tokenize(document);
+
 		if (token.isCancellationRequested) {
 			return [];
 		}
@@ -369,6 +386,7 @@ export class MdLinkComputer {
 		const inlineLinks = Array.from(
 			this.#getInlineLinks(document, noLinkRanges),
 		);
+
 		return [
 			...inlineLinks,
 			...this.#getReferenceLinks(
@@ -388,8 +406,10 @@ export class MdLinkComputer {
 		noLinkRanges: NoLinkRanges,
 	): Iterable<MdLink> {
 		const text = document.getText();
+
 		for (const match of text.matchAll(linkPattern)) {
 			const linkTextIncludingBrackets = match[1];
+
 			const matchLinkData = createMdLink(
 				document,
 				linkTextIncludingBrackets,
@@ -399,6 +419,7 @@ export class MdLinkComputer {
 				match[0],
 				this.#workspace,
 			);
+
 			if (
 				matchLinkData &&
 				!noLinkRanges.contains(matchLinkData.source.hrefRange.start)
@@ -408,7 +429,9 @@ export class MdLinkComputer {
 				// Also check for images in link text
 				if (/\![\[\(]/.test(linkTextIncludingBrackets)) {
 					const linkText = linkTextIncludingBrackets.slice(1, -1);
+
 					const startOffset = (match.index ?? 0) + 1;
+
 					for (const innerMatch of linkText.matchAll(linkPattern)) {
 						const innerData = createMdLink(
 							document,
@@ -419,6 +442,7 @@ export class MdLinkComputer {
 							innerMatch[0],
 							this.#workspace,
 						);
+
 						if (innerData) {
 							yield innerData;
 						}
@@ -440,16 +464,22 @@ export class MdLinkComputer {
 		noLinkRanges: NoLinkRanges,
 	): Iterable<MdLink> {
 		const text = document.getText();
+
 		const docUri = getDocUri(document);
+
 		for (const match of text.matchAll(autoLinkPattern)) {
 			const linkOffset = match.index ?? 0;
+
 			const linkStart = document.positionAt(linkOffset);
+
 			if (noLinkRanges.contains(linkStart)) {
 				continue;
 			}
 
 			const link = match[1];
+
 			const linkTarget = createHref(docUri, link, this.#workspace);
+
 			if (linkTarget?.kind !== HrefKind.External) {
 				continue;
 			}
@@ -457,13 +487,17 @@ export class MdLinkComputer {
 			const linkEnd = translatePosition(linkStart, {
 				characterDelta: match[0].length,
 			});
+
 			const hrefStart = translatePosition(linkStart, {
 				characterDelta: 1,
 			});
+
 			const hrefEnd = translatePosition(hrefStart, {
 				characterDelta: link.length,
 			});
+
 			const hrefRange = { start: hrefStart, end: hrefEnd };
+
 			yield {
 				kind: MdLinkKind.AutoLink,
 				href: linkTarget,
@@ -490,6 +524,7 @@ export class MdLinkComputer {
 		noLinkRanges: NoLinkRanges,
 	): Iterable<MdLink> {
 		const text = document.getText();
+
 		return this.#getReferenceLinksInText(document, text, 0, noLinkRanges);
 	}
 
@@ -505,17 +540,23 @@ export class MdLinkComputer {
 			}
 
 			const linkStartOffset = startingOffset + (match.index ?? 0);
+
 			const linkStart = document.positionAt(linkStartOffset);
+
 			if (noLinkRanges.contains(linkStart)) {
 				continue;
 			}
 
 			let hrefStart: lsp.Position;
+
 			let hrefEnd: lsp.Position;
+
 			let reference = match.groups["ref"];
+
 			if (reference === "") {
 				// [ref][],
 				reference = match.groups["text"].trim();
+
 				if (!reference) {
 					continue;
 				}
@@ -525,6 +566,7 @@ export class MdLinkComputer {
 			} else if (reference) {
 				// [text][ref]
 				const text = match.groups["text"];
+
 				if (!text) {
 					// Handle the case ![][cat]
 					if (!match[0].startsWith("!")) {
@@ -543,18 +585,21 @@ export class MdLinkComputer {
 				}
 
 				const pre = match[1];
+
 				const offset = linkStartOffset + pre.length;
 				hrefStart = document.positionAt(offset);
 				hrefEnd = document.positionAt(offset + reference.length);
 			} else if (match.groups["shorthand"]) {
 				// [ref]
 				reference = match.groups["shorthand"].trim();
+
 				if (!reference) {
 					continue;
 				}
 
 				const offset = linkStartOffset + 1;
 				hrefStart = document.positionAt(offset);
+
 				const line = getLine(document, hrefStart.line);
 
 				// See if link looks like link definition
@@ -567,6 +612,7 @@ export class MdLinkComputer {
 
 				// See if link looks like a checkbox
 				const checkboxMatch = line.match(/^\s*[\-\*\+]\s*\[x\]/i);
+
 				if (
 					checkboxMatch &&
 					hrefStart.character <= checkboxMatch[0].length
@@ -582,7 +628,9 @@ export class MdLinkComputer {
 			const linkEnd = translatePosition(linkStart, {
 				characterDelta: match[0].length,
 			});
+
 			const hrefRange = { start: hrefStart, end: hrefEnd };
+
 			yield {
 				kind: MdLinkKind.Link,
 				source: {
@@ -608,21 +656,30 @@ export class MdLinkComputer {
 		noLinkRanges: NoLinkRanges,
 	): Iterable<MdLinkDefinition> {
 		const text = document.getText();
+
 		const docUri = getDocUri(document);
+
 		for (const match of text.matchAll(definitionPattern)) {
 			const offset = match.index ?? 0;
+
 			const linkStart = document.positionAt(offset);
+
 			if (noLinkRanges.contains(linkStart)) {
 				continue;
 			}
 
 			const pre = match[1];
+
 			const reference = match[2];
+
 			const rawLinkText = match[3].trim();
+
 			const isAngleBracketLink = angleBracketLinkRe.test(rawLinkText);
+
 			const linkText = stripAngleBrackets(rawLinkText);
 
 			const target = createHref(docUri, linkText, this.#workspace);
+
 			if (!target) {
 				continue;
 			}
@@ -630,24 +687,30 @@ export class MdLinkComputer {
 			const hrefStart = translatePosition(linkStart, {
 				characterDelta: pre.length + (isAngleBracketLink ? 1 : 0),
 			});
+
 			const hrefEnd = translatePosition(hrefStart, {
 				characterDelta: linkText.length,
 			});
+
 			const hrefRange = { start: hrefStart, end: hrefEnd };
 
 			const refStart = translatePosition(linkStart, {
 				characterDelta: 1,
 			});
+
 			const refRange: lsp.Range = {
 				start: refStart,
 				end: translatePosition(refStart, {
 					characterDelta: reference.length,
 				}),
 			};
+
 			const line = getLine(document, linkStart.line);
+
 			const linkEnd = translatePosition(linkStart, {
 				characterDelta: line.length,
 			});
+
 			yield {
 				kind: MdLinkKind.Definition,
 				source: {
@@ -675,6 +738,7 @@ export class MdLinkComputer {
 		noLinkRanges: NoLinkRanges,
 	): Iterable<MdLink> {
 		const text = document.getText();
+
 		if (!/<\w/.test(text)) {
 			// Only parse if there may be html
 			return [];
@@ -682,6 +746,7 @@ export class MdLinkComputer {
 
 		try {
 			const tree = parse(text);
+
 			return this.#getHtmlLinksFromNode(document, tree, noLinkRanges);
 		} catch {
 			return [];
@@ -706,20 +771,25 @@ export class MdLinkComputer {
 		noLinkRanges: NoLinkRanges,
 	): Iterable<MdLink> {
 		const attrs = MdLinkComputer.#linkAttrsByTag.get(node.tagName);
+
 		if (attrs) {
 			for (const attr of attrs) {
 				const link = node.attributes[attr.attr];
+
 				if (!link) {
 					continue;
 				}
 
 				const attrMatch = node.outerHTML.match(attr.regexp);
+
 				if (!attrMatch) {
 					continue;
 				}
 
 				const docUri = getDocUri(document);
+
 				const linkTarget = createHref(docUri, link, this.#workspace);
+
 				if (!linkTarget) {
 					continue;
 				}
@@ -727,6 +797,7 @@ export class MdLinkComputer {
 				const linkStart = document.positionAt(
 					node.range[0] + attrMatch.index! + attrMatch[1].length,
 				);
+
 				if (noLinkRanges.contains(linkStart, "html_block")) {
 					continue;
 				}
@@ -734,7 +805,9 @@ export class MdLinkComputer {
 				const linkEnd = translatePosition(linkStart, {
 					characterDelta: attrMatch[2].length,
 				});
+
 				const hrefRange = { start: linkStart, end: linkEnd };
+
 				yield {
 					kind: MdLinkKind.Link,
 					href: linkTarget,
@@ -821,6 +894,7 @@ export class MdLinkProvider extends Disposable {
 		});
 
 		const links = await this.#linkComputer.getAllLinks(doc, token);
+
 		return {
 			links,
 			definitions: new LinkDefinitionSet(links),
@@ -832,6 +906,7 @@ export class MdLinkProvider extends Disposable {
 		token: lsp.CancellationToken,
 	): Promise<lsp.DocumentLink[]> {
 		const { links, definitions } = await this.getLinks(document);
+
 		if (token.isCancellationRequested) {
 			return [];
 		}
@@ -846,6 +921,7 @@ export class MdLinkProvider extends Disposable {
 		token: lsp.CancellationToken,
 	): Promise<lsp.DocumentLink | undefined> {
 		const href = this.#reviveLinkHrefData(link);
+
 		if (!href) {
 			return undefined;
 		}
@@ -855,16 +931,21 @@ export class MdLinkProvider extends Disposable {
 			href.fragment,
 			token,
 		);
+
 		switch (target.kind) {
 			case "folder":
 				link.target = this.#createCommandUri(
 					"revealInExplorer",
 					href.path,
 				);
+
 				break;
+
 			case "external":
 				link.target = target.uri.toString(true);
+
 				break;
+
 			case "file":
 				if (target.position) {
 					link.target = this.#createOpenAtPosCommand(
@@ -886,6 +967,7 @@ export class MdLinkProvider extends Disposable {
 		token: lsp.CancellationToken,
 	): Promise<ResolvedDocumentLinkTarget | undefined> {
 		const href = createHref(sourceDoc, linkText, this.#workspace);
+
 		if (href?.kind !== HrefKind.Internal) {
 			return undefined;
 		}
@@ -895,6 +977,7 @@ export class MdLinkProvider extends Disposable {
 			linkText,
 			this.#workspace,
 		);
+
 		if (!resolved) {
 			return undefined;
 		}
@@ -917,8 +1000,10 @@ export class MdLinkProvider extends Disposable {
 		// link to a workspace file as one will not exist
 		const containingContext =
 			this.#workspace.getContainingDocument?.(target);
+
 		if (!containingContext) {
 			const stat = await this.#workspace.stat(target);
+
 			if (stat?.isDirectory) {
 				return { kind: "folder", uri: target };
 			}
@@ -930,10 +1015,12 @@ export class MdLinkProvider extends Disposable {
 			if (!stat) {
 				// We don't think the file exists. If it doesn't already have an extension, try tacking on a `.md` and using that instead
 				let found = false;
+
 				const dotMdResource = tryAppendMarkdownFileExtension(
 					this.#config,
 					target,
 				);
+
 				if (dotMdResource) {
 					if (await this.#workspace.stat(dotMdResource)) {
 						target = dotMdResource;
@@ -954,6 +1041,7 @@ export class MdLinkProvider extends Disposable {
 		// Try navigating with fragment that sets line number
 		const locationLinkPosition =
 			parseLocationInfoFromFragment(linkFragment);
+
 		if (locationLinkPosition) {
 			return {
 				kind: "file",
@@ -964,13 +1052,16 @@ export class MdLinkProvider extends Disposable {
 
 		// Try navigating to header in file
 		const doc = await this.#workspace.openMarkdownDocument(target);
+
 		if (token.isCancellationRequested) {
 			return { kind: "file", uri: target };
 		}
 
 		if (doc) {
 			const toc = await this.#tocProvider.getForContainingDoc(doc, token);
+
 			const entry = toc.lookupByFragment(linkFragment);
+
 			if (entry) {
 				return {
 					kind: "file",
@@ -992,6 +1083,7 @@ export class MdLinkProvider extends Disposable {
 		}
 
 		const mdLink = link.data as MdLink;
+
 		if (mdLink.href.kind !== HrefKind.Internal) {
 			return undefined;
 		}
@@ -1025,6 +1117,7 @@ export class MdLinkProvider extends Disposable {
 				// We only render reference links in the editor if they are actually defined.
 				// This matches how reference links are rendered by markdown-it.
 				const def = definitionSet.lookup(link.href.ref);
+
 				if (!def) {
 					return undefined;
 				}
@@ -1033,6 +1126,7 @@ export class MdLinkProvider extends Disposable {
 					link.source.resource,
 					def.source.hrefRange.start,
 				);
+
 				return {
 					range: link.source.hrefRange,
 					tooltip: l10n.t("Go to link definition"),
@@ -1074,6 +1168,7 @@ export function createWorkspaceLinkCache(
 	workspace: IWorkspace,
 ) {
 	const linkComputer = new MdLinkComputer(parser, workspace);
+
 	return new MdWorkspaceInfoCache(workspace, (doc, token) =>
 		linkComputer.getAllLinks(doc, token),
 	);

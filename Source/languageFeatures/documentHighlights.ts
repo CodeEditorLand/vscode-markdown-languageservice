@@ -34,16 +34,19 @@ export class MdDocumentHighlightProvider {
 
 	public async getDocumentHighlights(document: ITextDocument, position: lsp.Position, token: lsp.CancellationToken): Promise<lsp.DocumentHighlight[]> {
 		const toc = await this.#tocProvider.getForDocument(document);
+
 		if (token.isCancellationRequested) {
 			return [];
 		}
 
 		const { links } = await this.#linkProvider.getLinks(document);
+
 		if (token.isCancellationRequested) {
 			return [];
 		}
 
 		const header = toc.entries.find(entry => entry.line === position.line);
+
 		if (header) {
 			return [...this.#getHighlightsForHeader(document, header, links, toc)];
 		}
@@ -55,6 +58,7 @@ export class MdDocumentHighlightProvider {
 		yield { range: header.headerLocation.range, kind: lsp.DocumentHighlightKind.Write };
 
 		const docUri = getDocUri(document);
+
 		for (const link of links) {
 			if (link.href.kind === HrefKind.Internal
 				&& toc.lookupByFragment(link.href.fragment) === header
@@ -71,6 +75,7 @@ export class MdDocumentHighlightProvider {
 
 	#getHighlightsForLinkAtPosition(document: ITextDocument, position: lsp.Position, links: readonly MdLink[], toc: TableOfContents): Iterable<lsp.DocumentHighlight> {
 		const link = links.find(link => rangeContains(link.source.hrefRange, position) || (link.kind === MdLinkKind.Definition && rangeContains(link.ref.range, position)));
+
 		if (!link) {
 			return [];
 		}
@@ -99,6 +104,7 @@ export class MdDocumentHighlightProvider {
 
 	*#getHighlightsForLinkFragment(document: ITextDocument, href: InternalHref, links: readonly MdLink[], toc: TableOfContents): Iterable<lsp.DocumentHighlight> {
 		const targetDoc = tryAppendMarkdownFileExtension(this.#configuration, href.path);
+
 		if (!targetDoc) {
 			return;
 		}
@@ -107,6 +113,7 @@ export class MdDocumentHighlightProvider {
 
 		if (isSameResource(targetDoc, getDocUri(document))) {
 			const header = toc.lookupByFragment(fragment);
+
 			if (header) {
 				yield { range: header.headerLocation.range, kind: lsp.DocumentHighlightKind.Write };
 			}
@@ -126,6 +133,7 @@ export class MdDocumentHighlightProvider {
 
 	*#getHighlightsForLinkPath(path: URI, links: readonly MdLink[]): Iterable<lsp.DocumentHighlight> {
 		const targetDoc = tryAppendMarkdownFileExtension(this.#configuration, path) ?? path;
+
 		for (const link of links) {
 			if (link.href.kind === HrefKind.Internal && looksLikePathToResource(this.#configuration, link.href.path, targetDoc)) {
 				yield {

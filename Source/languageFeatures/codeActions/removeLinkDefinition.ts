@@ -39,6 +39,7 @@ export class MdRemoveLinkDefinitionCodeActionProvider {
 				rangeIntersects(diag.range, range)
 			) {
 				const link = diag.data as MdLinkDefinition;
+
 				yield this.#getRemoveDefinitionAction(
 					doc,
 					link,
@@ -56,6 +57,7 @@ export class MdRemoveLinkDefinitionCodeActionProvider {
 				rangeIntersects(diag.range, range)
 			) {
 				const link = diag.data as MdLinkDefinition;
+
 				if (!unusedDiagnosticLines.has(link.source.range.start.line)) {
 					yield this.#getRemoveDefinitionAction(
 						doc,

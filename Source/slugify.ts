@@ -72,18 +72,23 @@ export const githubSlugifier: ISlugifier = new (class implements ISlugifier {
 
 	createBuilder() {
 		const entries = new Map<string, { count: number }>();
+
 		return {
 			add: (heading: string): ISlug => {
 				const slug = this.fromHeading(heading);
+
 				const existingSlugEntry = entries.get(slug.value);
+
 				if (existingSlugEntry) {
 					++existingSlugEntry.count;
+
 					return this.fromHeading(
 						slug.value + "-" + existingSlugEntry.count,
 					);
 				}
 
 				entries.set(slug.value, { count: 0 });
+
 				return slug;
 			},
 		};

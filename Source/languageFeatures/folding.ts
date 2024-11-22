@@ -48,7 +48,9 @@ export class MdFoldingProvider {
 			this.#getHeaderFoldingRanges(document, token),
 			this.#getBlockFoldingRanges(document, token),
 		]);
+
 		const result = foldables.flat();
+
 		return result.length > rangeLimit
 			? result.slice(0, rangeLimit)
 			: result;
@@ -59,6 +61,7 @@ export class MdFoldingProvider {
 		token: lsp.CancellationToken,
 	): Promise<lsp.FoldingRange[]> {
 		const tokens = await this.#parser.tokenize(document);
+
 		if (token.isCancellationRequested) {
 			return [];
 		}
@@ -70,8 +73,10 @@ export class MdFoldingProvider {
 		tokens: readonly Token[],
 	): Iterable<lsp.FoldingRange> {
 		const nestingStack: RegionMarker[] = [];
+
 		for (const token of tokens) {
 			const marker = asRegionMarker(token);
+
 			if (marker) {
 				if (marker.isStart) {
 					nestingStack.push(marker);
@@ -96,12 +101,14 @@ export class MdFoldingProvider {
 		token: lsp.CancellationToken,
 	): Promise<lsp.FoldingRange[]> {
 		const toc = await this.#tocProvider.getForDocument(document);
+
 		if (token.isCancellationRequested) {
 			return [];
 		}
 
 		return toc.entries.map((entry): lsp.FoldingRange => {
 			let endLine = entry.sectionLocation.range.end.line;
+
 			if (
 				isEmptyOrWhitespace(getLine(document, endLine)) &&
 				endLine >= entry.line + 1
@@ -117,6 +124,7 @@ export class MdFoldingProvider {
 		token: lsp.CancellationToken,
 	): Promise<lsp.FoldingRange[]> {
 		const tokens = await this.#parser.tokenize(document);
+
 		if (token.isCancellationRequested) {
 			return [];
 		}
@@ -132,7 +140,9 @@ export class MdFoldingProvider {
 		for (const token of tokens) {
 			if (isFoldableToken(token)) {
 				const startLine = token.map[0];
+
 				let endLine = token.map[1] - 1;
+
 				if (
 					isEmptyOrWhitespace(getLine(document, endLine)) &&
 					endLine >= startLine + 1

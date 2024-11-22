@@ -57,10 +57,12 @@ export class MdFileRenameProvider {
 		token: lsp.CancellationToken,
 	): Promise<FileRenameResponse | undefined> {
 		const builder = new WorkspaceEditBuilder();
+
 		const participatingRenames: FileRename[] = [];
 
 		for (const edit of edits) {
 			const stat = await this.#workspace.stat(edit.newUri);
+
 			if (token.isCancellationRequested) {
 				return undefined;
 			}
@@ -118,11 +120,13 @@ export class MdFileRenameProvider {
 	): Promise<boolean> {
 		// First update every link that points to something in the moved dir
 		const allLinksInWorkspace = await this.#linkCache.entries();
+
 		if (token.isCancellationRequested) {
 			return false;
 		}
 
 		let didParticipate = false;
+
 		for (const [docUri, links] of allLinksInWorkspace) {
 			for (const link of links) {
 				if (
@@ -138,6 +142,7 @@ export class MdFileRenameProvider {
 						edit.oldUri.path,
 						link.href.path.path,
 					);
+
 					const newUri = edit.newUri.with({
 						path: path.posix.join(edit.newUri.path, relative),
 					});
@@ -146,6 +151,7 @@ export class MdFileRenameProvider {
 						this.#addLinkRenameEdit(docUri, link, newUri, builder)
 					) {
 						didParticipate = true;
+
 						continue;
 					}
 				}
@@ -168,8 +174,10 @@ export class MdFileRenameProvider {
 						link.source.hrefText,
 						this.#workspace,
 					);
+
 					if (oldLink) {
 						let newPathText: string;
+
 						if (isParentDir(edit.oldUri, oldLink.resource)) {
 							// The link still points within the directory being moved.
 							// This means we just need to normalize the path it in case it was referencing any old names.
@@ -189,6 +197,7 @@ export class MdFileRenameProvider {
 						}
 
 						const replacementPath = encodeURI(newPathText);
+
 						if (replacementPath !== link.source.pathText) {
 							const { range, newText } = getLinkRenameEdit(
 								link,
@@ -223,6 +232,7 @@ export class MdFileRenameProvider {
 		}
 
 		const doc = await this.#workspace.openMarkdownDocument(edit.newUri);
+
 		if (!doc) {
 			return false;
 		}
@@ -230,6 +240,7 @@ export class MdFileRenameProvider {
 		const links = (await this.#linkCache.getForDocs([doc]))[0];
 
 		let didParticipate = false;
+
 		for (const link of links) {
 			if (
 				await this.#addEditsForLinksInSelf(
@@ -273,6 +284,7 @@ export class MdFileRenameProvider {
 			link.source.hrefText,
 			this.#workspace,
 		);
+
 		if (!oldLink) {
 			return false;
 		}
@@ -293,6 +305,7 @@ export class MdFileRenameProvider {
 					),
 					linkFragment: oldLink.linkFragment,
 				};
+
 				break;
 			}
 		}
@@ -322,11 +335,13 @@ export class MdFileRenameProvider {
 				edit.oldUri,
 				token,
 			);
+
 		if (token.isCancellationRequested) {
 			return false;
 		}
 
 		let didParticipate = false;
+
 		for (const ref of refs) {
 			if (ref.kind === MdReferenceKind.Link) {
 				if (
@@ -359,15 +374,18 @@ export class MdFileRenameProvider {
 			link.href,
 			newUri,
 		);
+
 		const newLinkText = getLinkRenameText(
 			this.#workspace,
 			link.source,
 			newFilePath,
 			link.source.pathText.startsWith("."),
 		);
+
 		if (typeof newLinkText === "string") {
 			const { range, newText } = getLinkRenameEdit(link, newLinkText);
 			builder.replace(doc, range, newText);
+
 			return true;
 		}
 		return false;

@@ -56,11 +56,13 @@ export class MdDocumentSymbolProvider {
 		const linkSymbols = await (options.includeLinkDefinitions
 			? this.#provideLinkDefinitionSymbols(document, token)
 			: []);
+
 		if (token.isCancellationRequested) {
 			return [];
 		}
 
 		const toc = await this.#tocProvider.getForDocument(document);
+
 		if (token.isCancellationRequested) {
 			return [];
 		}
@@ -79,10 +81,12 @@ export class MdDocumentSymbolProvider {
 			parent: undefined,
 			range: lsp.Range.create(0, 0, document.lineCount + 1, 0),
 		};
+
 		const additionalSymbols = [...linkSymbols];
 		this.#buildTocSymbolTree(root, toc.entries, additionalSymbols);
 		// Put remaining link definitions into top level document instead of last header
 		root.children.push(...additionalSymbols);
+
 		return root.children;
 	}
 
@@ -91,6 +95,7 @@ export class MdDocumentSymbolProvider {
 		token: lsp.CancellationToken,
 	): Promise<lsp.DocumentSymbol[]> {
 		const { links } = await this.#linkProvider.getLinks(document);
+
 		if (token.isCancellationRequested) {
 			return [];
 		}
@@ -118,6 +123,7 @@ export class MdDocumentSymbolProvider {
 		additionalSymbols: lsp.DocumentSymbol[],
 	): void {
 		let parent: MarkdownSymbol | undefined = root;
+
 		for (const entry of entries) {
 			while (
 				additionalSymbols.length &&

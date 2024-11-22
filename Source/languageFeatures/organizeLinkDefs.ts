@@ -24,6 +24,7 @@ export class MdOrganizeLinkDefinitionProvider {
 		token: lsp.CancellationToken,
 	): Promise<lsp.TextEdit[]> {
 		const links = await this.#linkProvider.getLinks(doc);
+
 		if (token.isCancellationRequested) {
 			return [];
 		}
@@ -31,6 +32,7 @@ export class MdOrganizeLinkDefinitionProvider {
 		const definitions = links.links.filter(
 			(link) => link.kind === MdLinkKind.Definition,
 		) as MdLinkDefinition[];
+
 		if (!definitions.length) {
 			return [];
 		}
@@ -39,6 +41,7 @@ export class MdOrganizeLinkDefinitionProvider {
 			doc,
 			definitions,
 		);
+
 		const edits: lsp.TextEdit[] = [];
 
 		// First replace all inline definitions that are not the definition block
@@ -128,10 +131,14 @@ export class MdOrganizeLinkDefinitionProvider {
 		}
 
 		let i = 0;
+
 		const startDef = definitions[i];
+
 		let endDef = startDef;
+
 		for (; i < definitions.length - 1; ++i) {
 			const nextDef = definitions[i + 1];
+
 			if (
 				nextDef.source.range.start.line ===
 				endDef.source.range.start.line + 1
@@ -146,6 +153,7 @@ export class MdOrganizeLinkDefinitionProvider {
 			startLine: startDef.source.range.start.line,
 			endLine: endDef.source.range.start.line,
 		};
+
 		yield* this.#getDefinitionBlockGroups(doc, definitions.slice(i + 1));
 	}
 
@@ -154,6 +162,7 @@ export class MdOrganizeLinkDefinitionProvider {
 		orderedDefinitions: readonly MdLinkDefinition[],
 	): number {
 		const lastDef = orderedDefinitions[orderedDefinitions.length - 1];
+
 		const textAfter = doc.getText(
 			lsp.Range.create(
 				lastDef.source.range.end.line + 1,
@@ -162,7 +171,9 @@ export class MdOrganizeLinkDefinitionProvider {
 				0,
 			),
 		);
+
 		const lines = textAfter.split(/\r\n|\n/g);
+
 		for (let i = lines.length - 1; i >= 0; --i) {
 			if (!isEmptyOrWhitespace(lines[i])) {
 				return lastDef.source.range.start.line + 1 + i;
@@ -186,10 +197,13 @@ export function getExistingDefinitionBlock(
 	const textAfter = doc.getText(
 		lsp.Range.create(lastDef.source.range.end.line + 1, 0, maxLspUInt, 0),
 	);
+
 	if (isEmptyOrWhitespace(textAfter)) {
 		let prevDef = lastDef;
+
 		for (let i = orderedDefinitions.length - 1; i >= 0; --i) {
 			const def = orderedDefinitions[i];
+
 			if (
 				def.source.range.start.line <
 				prevDef.source.range.start.line - 1

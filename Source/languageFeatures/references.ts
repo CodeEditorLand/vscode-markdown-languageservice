@@ -99,6 +99,7 @@ export class MdReferencesProvider extends Disposable {
 
 	async provideReferences(document: ITextDocument, position: lsp.Position, context: lsp.ReferenceContext, token: lsp.CancellationToken): Promise<lsp.Location[]> {
 		const allRefs = await this.getReferencesAtPosition(document, position, token);
+
 		return allRefs
 			.filter(ref => context.includeDeclaration || !ref.isDefinition)
 			.map(ref => ref.location);
@@ -108,11 +109,13 @@ export class MdReferencesProvider extends Disposable {
 		this.#logger.log(LogLevel.Debug, 'ReferencesProvider.getReferencesAtPosition', { document: document.uri, version: document.version });
 
 		const toc = await this.#tocProvider.getForDocument(document);
+
 		if (token.isCancellationRequested) {
 			return [];
 		}
 
 		const header = toc.entries.find(entry => entry.line === position.line);
+
 		if (header) {
 			return this.#getReferencesToHeader(document, header, token);
 		} else {
@@ -124,6 +127,7 @@ export class MdReferencesProvider extends Disposable {
 		this.#logger.log(LogLevel.Debug, 'ReferencesProvider.getAllReferencesToFileInWorkspace', { resource });
 
 		const allLinksInWorkspace = await this.#getAllLinksInWorkspace();
+
 		if (token.isCancellationRequested) {
 			return [];
 		}
@@ -133,6 +137,7 @@ export class MdReferencesProvider extends Disposable {
 
 	async #getReferencesToHeader(document: ITextDocument, header: TocEntry, token: lsp.CancellationToken): Promise<MdReference[]> {
 		const links = await this.#getAllLinksInWorkspace();
+
 		if (token.isCancellationRequested) {
 			return [];
 		}
@@ -168,6 +173,7 @@ export class MdReferencesProvider extends Disposable {
 
 	async #getReferencesToLinkAtPosition(document: ITextDocument, position: lsp.Position, token: lsp.CancellationToken): Promise<MdReference[]> {
 		const docLinks = (await this.#linkCache.getForDocs([document]))[0];
+
 		if (token.isCancellationRequested) {
 			return [];
 		}
@@ -197,6 +203,7 @@ export class MdReferencesProvider extends Disposable {
 
 		// Otherwise find all occurrences of the link in the workspace
 		const allLinksInWorkspace = await this.#getAllLinksInWorkspace();
+
 		if (token.isCancellationRequested) {
 			return [];
 		}
@@ -220,6 +227,7 @@ export class MdReferencesProvider extends Disposable {
 		}
 
 		const resolvedResource = await statLinkToMarkdownFile(this.#configuration, this.#workspace, sourceLink.href.path);
+
 		if (token.isCancellationRequested) {
 			return [];
 		}
@@ -228,7 +236,9 @@ export class MdReferencesProvider extends Disposable {
 
 		if (resolvedResource && this.#isMarkdownPath(resolvedResource) && sourceLink.href.fragment && sourceLink.source.fragmentRange && rangeContains(sourceLink.source.fragmentRange, triggerPosition)) {
 			const toc = await this.#tocProvider.get(resolvedResource);
+
 			const entry = toc?.lookupByFragment(sourceLink.href.fragment);
+
 			if (entry) {
 				references.push({
 					kind: MdReferenceKind.Header,
@@ -283,7 +293,9 @@ export class MdReferencesProvider extends Disposable {
 			}
 
 			const isTriggerLocation = !!sourceLink && sourceLink.source.resource.fsPath === link.source.resource.fsPath && areRangesEqual(sourceLink.source.hrefRange, link.source.hrefRange);
+
 			const pathRange = this.#getPathRange(link);
+
 			yield {
 				kind: MdReferenceKind.Link,
 				isTriggerLocation,
@@ -297,6 +309,7 @@ export class MdReferencesProvider extends Disposable {
 	*#getReferencesToLinkReference(allLinks: Iterable<MdLink>, refToFind: string, from: { resource: URI; range: lsp.Range }): Iterable<MdReference> {
 		for (const link of allLinks) {
 			let ref: string;
+
 			if (link.kind === MdLinkKind.Definition) {
 				ref = link.ref.text;
 			} else if (link.href.kind === HrefKind.Reference) {
@@ -310,6 +323,7 @@ export class MdReferencesProvider extends Disposable {
 					(link.href.kind === HrefKind.Reference && areRangesEqual(from.range, link.source.hrefRange)) || (link.kind === MdLinkKind.Definition && areRangesEqual(from.range, link.ref.range)));
 
 				const pathRange = this.#getPathRange(link);
+
 				yield {
 					kind: MdReferenceKind.Link,
 					isTriggerLocation,

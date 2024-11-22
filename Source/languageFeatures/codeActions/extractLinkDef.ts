@@ -64,6 +64,7 @@ export class MdExtractLinkDefinitionCodeActionProvider {
 		}
 
 		const linkInfo = await this.#linkProvider.getLinks(doc);
+
 		if (token.isCancellationRequested) {
 			return [];
 		}
@@ -73,6 +74,7 @@ export class MdExtractLinkDefinitionCodeActionProvider {
 				link.kind !== MdLinkKind.Definition &&
 				rangeIntersects(range, link.source.range),
 		) as MdInlineLink[];
+
 		if (!linksInRange.length) {
 			return [MdExtractLinkDefinitionCodeActionProvider.notOnLinkAction];
 		}
@@ -89,6 +91,7 @@ export class MdExtractLinkDefinitionCodeActionProvider {
 				link.href.kind === HrefKind.External ||
 				link.href.kind === HrefKind.Internal,
 		);
+
 		if (!targetLink) {
 			return [
 				MdExtractLinkDefinitionCodeActionProvider.alreadyRefLinkAction,
@@ -120,7 +123,9 @@ export class MdExtractLinkDefinitionCodeActionProvider {
 		targetLink: MdInlineLink<InternalHref | ExternalHref>,
 	): lsp.CodeAction {
 		const builder = new WorkspaceEditBuilder();
+
 		const resource = getDocUri(doc);
+
 		const placeholder = this.#getPlaceholder(linkInfo.definitions);
 
 		// Rewrite all inline occurrences of the link
@@ -140,9 +145,11 @@ export class MdExtractLinkDefinitionCodeActionProvider {
 		}
 
 		const definitionText = getLinkTargetText(doc, targetLink).trim();
+
 		const definitions = linkInfo.links.filter(
 			(link) => link.kind === MdLinkKind.Definition,
 		) as MdLinkDefinition[];
+
 		const defEdit = createAddDefinitionEdit(doc, definitions, [
 			{ definitionText, placeholder },
 		]);
@@ -152,6 +159,7 @@ export class MdExtractLinkDefinitionCodeActionProvider {
 			targetLink.source.targetRange.start,
 			{ characterDelta: 1 },
 		);
+
 		return {
 			title: MdExtractLinkDefinitionCodeActionProvider.genericTitle,
 			kind: MdExtractLinkDefinitionCodeActionProvider.#kind,
@@ -166,8 +174,10 @@ export class MdExtractLinkDefinitionCodeActionProvider {
 
 	#getPlaceholder(definitions: LinkDefinitionSet): string {
 		const base = "def";
+
 		for (let i = 1; ; ++i) {
 			const name = i === 1 ? base : `${base}${i}`;
+
 			if (typeof definitions.lookup(name) === "undefined") {
 				return name;
 			}
@@ -202,6 +212,7 @@ export function createAddDefinitionEdit(
 	newDefs: ReadonlyArray<{ definitionText: string; placeholder: string }>,
 ): lsp.TextEdit {
 	const defBlock = getExistingDefinitionBlock(doc, existingDefinitions);
+
 	const newDefText = newDefs
 		.map(
 			({ definitionText, placeholder }) =>
@@ -216,6 +227,7 @@ export function createAddDefinitionEdit(
 		);
 	} else {
 		const line = getLine(doc, defBlock.endLine);
+
 		return lsp.TextEdit.insert(
 			{ line: defBlock.endLine, character: line.length },
 			"\n" + newDefText,
@@ -238,5 +250,6 @@ function getLinkTargetText(
 						characterDelta: -1,
 					}),
 				);
+
 	return doc.getText(afterHrefRange);
 }

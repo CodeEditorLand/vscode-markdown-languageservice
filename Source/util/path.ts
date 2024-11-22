@@ -20,6 +20,7 @@ export function isParentDir(parent: URI, maybeChild: URI): boolean {
 		parent.authority === maybeChild.authority
 	) {
 		const relative = path.relative(parent.path, maybeChild.path);
+
 		return !relative.startsWith("..");
 	}
 	return false;
@@ -35,7 +36,9 @@ export function computeRelativePath(
 		fromDoc.scheme !== Schemes.untitled
 	) {
 		const rootDir = Utils.dirname(fromDoc);
+
 		let newLink = path.posix.relative(rootDir.path, toDoc.path);
+
 		if (
 			preferDotSlash &&
 			!(newLink.startsWith("../") || newLink.startsWith("..\\"))
@@ -98,15 +101,18 @@ export function parseLocationInfoFromFragment(
 	fragment: string,
 ): lsp.Position | undefined {
 	const match = fragment.match(/^L(\d+)(?:,(\d+))?$/i);
+
 	if (!match) {
 		return undefined;
 	}
 
 	const line = +match[1] - 1;
+
 	if (isNaN(line)) {
 		return undefined;
 	}
 
 	const column = +match[2] - 1;
+
 	return { line, character: isNaN(column) ? 0 : column };
 }

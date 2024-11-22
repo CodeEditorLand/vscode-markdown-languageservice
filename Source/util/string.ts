@@ -19,12 +19,16 @@ export function fuzzyContains(target: string, query: string): boolean {
 	}
 
 	const queryLen = query.length;
+
 	const targetLower = target.toLowerCase();
 
 	let index = 0;
+
 	let lastIndexOf = -1;
+
 	while (index < queryLen) {
 		const indexOf = targetLower.indexOf(query[index], lastIndexOf + 1);
+
 		if (indexOf < 0) {
 			return false;
 		}

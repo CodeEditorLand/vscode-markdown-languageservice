@@ -41,6 +41,7 @@ export class MdDefinitionProvider {
 		token: lsp.CancellationToken,
 	): Promise<lsp.Definition | undefined> {
 		const toc = await this.#tocProvider.getForDocument(document);
+
 		if (token.isCancellationRequested) {
 			return [];
 		}
@@ -48,6 +49,7 @@ export class MdDefinitionProvider {
 		const header = toc.entries.find(
 			(entry) => entry.line === position.line,
 		);
+
 		if (header) {
 			return header.headerLocation;
 		}
@@ -101,17 +103,21 @@ export class MdDefinitionProvider {
 			this.#workspace,
 			sourceLink.href.path,
 		);
+
 		if (!resolvedResource || token.isCancellationRequested) {
 			return undefined;
 		}
 
 		const toc = await this.#tocProvider.get(resolvedResource);
+
 		return toc?.lookupByFragment(sourceLink.href.fragment)?.headerLocation;
 	}
 
 	#getDefinitionOfRef(ref: string, allLinksInFile: readonly MdLink[]) {
 		const allDefinitions = new LinkDefinitionSet(allLinksInFile);
+
 		const def = allDefinitions.lookup(ref);
+
 		return def
 			? { range: def.source.range, uri: def.source.resource.toString() }
 			: undefined;

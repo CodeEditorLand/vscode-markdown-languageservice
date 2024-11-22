@@ -9,36 +9,44 @@ import { escapeForAngleBracketLink, needsAngleBracketLink } from "./mdLinks";
 
 export function inlineCode(text: string): string {
 	text = text.replace(/\n/, "");
+
 	const longestBacktickSequence = Math.max(
 		0,
 		...Array.from(text.matchAll(/`+/g), ([match]) => match.length),
 	);
+
 	const backticks = "`".repeat(longestBacktickSequence + 1);
+
 	return `${backticks}${text}${backticks}`;
 }
 
 export function link(text: string, uri: URI): string {
 	const path = uri.toString();
+
 	return `[${escapeMarkdownSyntaxTokens(text.replace(/\n/, ""))}](${bracketPathIfNeeded(path)})`;
 }
 
 export function codeLink(text: string, uri: URI): string {
 	const path = uri.toString();
+
 	return `[${inlineCode(text)}](${bracketPathIfNeeded(path)})`;
 }
 
 export function image(uri: URI, alt: string, width?: number): string {
 	const path = uri.toString();
+
 	return `![${alt}](${bracketPathIfNeeded(path + (width ? `|width=${width}` : ""))})`;
 }
 
 export function imageLink(uri: URI, alt: string, width?: number): string {
 	const path = uri.toString();
+
 	return `[${image(uri, alt, width)}](${bracketPathIfNeeded(path)})`;
 }
 
 export function video(uri: URI, width?: number): string {
 	const path = uri.toString();
+
 	return `<video width="${width ?? ""}" src="${escapeHtmlAttribute(path)}" autoplay loop controls muted></video>`;
 }
 

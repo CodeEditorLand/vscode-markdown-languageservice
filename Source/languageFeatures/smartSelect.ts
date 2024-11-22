@@ -58,6 +58,7 @@ export class MdSelectionRangeProvider {
 			position,
 			token,
 		);
+
 		if (token.isCancellationRequested) {
 			return;
 		}
@@ -68,11 +69,13 @@ export class MdSelectionRangeProvider {
 			headerRange,
 			token,
 		);
+
 		if (token.isCancellationRequested) {
 			return;
 		}
 
 		const inlineRange = createInlineRange(document, position, blockRange);
+
 		return inlineRange ?? blockRange ?? headerRange;
 	}
 
@@ -83,11 +86,13 @@ export class MdSelectionRangeProvider {
 		token: lsp.CancellationToken,
 	): Promise<lsp.SelectionRange | undefined> {
 		const tokens = await this.#parser.tokenize(document);
+
 		if (token.isCancellationRequested) {
 			return undefined;
 		}
 
 		const blockTokens = getBlockTokensForPosition(tokens, position, parent);
+
 		if (blockTokens.length === 0) {
 			return undefined;
 		}
@@ -100,6 +105,7 @@ export class MdSelectionRangeProvider {
 				position.line,
 				undefined,
 			);
+
 		for (let i = 0; i < blockTokens.length; i++) {
 			currentRange = createBlockRange(
 				blockTokens[i],
@@ -117,14 +123,17 @@ export class MdSelectionRangeProvider {
 		token: lsp.CancellationToken,
 	): Promise<lsp.SelectionRange | undefined> {
 		const toc = await this.#tocProvider.getForDocument(document);
+
 		if (token.isCancellationRequested) {
 			return undefined;
 		}
 
 		const headerInfo = getHeadersForPosition(toc.entries, position);
+
 		const headers = headerInfo.headers;
 
 		let currentRange: lsp.SelectionRange | undefined;
+
 		for (let i = 0; i < headers.length; i++) {
 			currentRange = createHeaderRange(
 				headers[i],
@@ -147,12 +156,15 @@ function getHeadersForPosition(
 			header.sectionLocation.range.start.line <= position.line &&
 			header.sectionLocation.range.end.line >= position.line,
 	);
+
 	const sortedHeaders = enclosingHeaders.sort(
 		(header1, header2) =>
 			header1.line - position.line - (header2.line - position.line),
 	);
+
 	const onThisLine =
 		toc.find((header) => header.line === position.line) !== undefined;
+
 	return {
 		headers: sortedHeaders,
 		headerOnThisLine: onThisLine,
@@ -167,10 +179,12 @@ function createHeaderRange(
 	startOfChildRange?: lsp.Position,
 ): lsp.SelectionRange | undefined {
 	const range = header.sectionLocation.range;
+
 	const contentRange = lsp.Range.create(
 		translatePosition(range.start, { lineDelta: 1 }),
 		range.end,
 	);
+
 	if (onHeaderLine && isClosestHeaderToPosition && startOfChildRange) {
 		// selection was made on this header line, so select header and its content until the start of its first child
 		// then all of its content
@@ -212,6 +226,7 @@ function getBlockTokensForPosition(
 					token.map[1] <= parent.range.end.line + 1)) &&
 			isBlockElement(token),
 	);
+
 	if (enclosingTokens.length === 0) {
 		return [];
 	}
@@ -219,6 +234,7 @@ function getBlockTokensForPosition(
 		(token1, token2) =>
 			token2.map[1] - token2.map[0] - (token1.map[1] - token1.map[0]),
 	);
+
 	return sortedTokens;
 }
 
@@ -235,7 +251,9 @@ function createBlockRange(
 	let startLine = isEmptyOrWhitespace(getLine(document, block.map[0]))
 		? block.map[0] + 1
 		: block.map[0];
+
 	let endLine = startLine === block.map[1] ? block.map[1] : block.map[1] - 1;
+
 	if (block.type === "paragraph_open" && block.map[1] - block.map[0] === 2) {
 		startLine = endLine = cursorLine;
 	} else if (
@@ -250,6 +268,7 @@ function createBlockRange(
 		endLine,
 		getLine(document, endLine).length,
 	);
+
 	if (
 		parent &&
 		rangeContains(parent.range, range) &&
@@ -269,12 +288,14 @@ function createInlineRange(
 	parent?: lsp.SelectionRange,
 ): lsp.SelectionRange | undefined {
 	const lineText = getLine(document, cursorPosition.line);
+
 	const boldSelection = createBoldRange(
 		lineText,
 		cursorPosition.character,
 		cursorPosition.line,
 		parent,
 	);
+
 	const italicSelection = createOtherInlineRange(
 		lineText,
 		cursorPosition.character,
@@ -282,7 +303,9 @@ function createInlineRange(
 		true,
 		parent,
 	);
+
 	let comboSelection: lsp.SelectionRange | undefined;
+
 	if (
 		boldSelection &&
 		italicSelection &&
@@ -311,6 +334,7 @@ function createInlineRange(
 		cursorPosition.line,
 		comboSelection ?? boldSelection ?? italicSelection ?? parent,
 	);
+
 	const inlineCodeBlockSelection = createOtherInlineRange(
 		lineText,
 		cursorPosition.character,
@@ -318,6 +342,7 @@ function createInlineRange(
 		false,
 		linkSelection ?? parent,
 	);
+
 	return (
 		inlineCodeBlockSelection ??
 		linkSelection ??
@@ -334,14 +359,18 @@ function createFencedRange(
 	parent?: lsp.SelectionRange,
 ): lsp.SelectionRange {
 	const startLine = token.map[0];
+
 	const endLine = token.map[1] - 1;
+
 	const onFenceLine = cursorLine === startLine || cursorLine === endLine;
+
 	const fenceRange = lsp.Range.create(
 		startLine,
 		0,
 		endLine,
 		getLine(document, endLine).length,
 	);
+
 	const contentRange =
 		endLine - startLine > 2 && !onFenceLine
 			? lsp.Range.create(
@@ -351,6 +380,7 @@ function createFencedRange(
 					getLine(document, endLine - 1).length,
 				)
 			: undefined;
+
 	if (contentRange) {
 		return makeSelectionRange(
 			contentRange,
@@ -372,20 +402,25 @@ function createBoldRange(
 	parent?: lsp.SelectionRange,
 ): lsp.SelectionRange | undefined {
 	const regex = /\*\*([^*]+\*?[^*]+\*?[^*]+)\*\*/gim;
+
 	const matches = [...lineText.matchAll(regex)].filter(
 		(match) =>
 			lineText.indexOf(match[0]) <= cursorChar &&
 			lineText.indexOf(match[0]) + match[0].length >= cursorChar,
 	);
+
 	if (matches.length) {
 		// should only be one match, so select first and index 0 contains the entire match
 		const bold = matches[0][0];
+
 		const startIndex = lineText.indexOf(bold);
+
 		const cursorOnStars =
 			cursorChar === startIndex ||
 			cursorChar === startIndex + 1 ||
 			cursorChar === startIndex + bold.length ||
 			cursorChar === startIndex + bold.length - 1;
+
 		const contentAndStars = makeSelectionRange(
 			lsp.Range.create(
 				cursorLine,
@@ -395,6 +430,7 @@ function createBoldRange(
 			),
 			parent,
 		);
+
 		const content = makeSelectionRange(
 			lsp.Range.create(
 				cursorLine,
@@ -404,6 +440,7 @@ function createBoldRange(
 			),
 			contentAndStars,
 		);
+
 		return cursorOnStars ? contentAndStars : content;
 	}
 	return undefined;
@@ -420,13 +457,16 @@ function createOtherInlineRange(
 		/(?:[^*]+)(\*([^*]+)(?:\*\*[^*]*\*\*)*([^*]+)\*)(?:[^*]+)/g,
 		/^(?:[^*]*)(\*([^*]+)(?:\*\*[^*]*\*\*)*([^*]+)\*)(?:[^*]*)$/g,
 	];
+
 	let matches = [];
+
 	if (isItalic) {
 		matches = [...lineText.matchAll(italicRegexes[0])].filter(
 			(match) =>
 				lineText.indexOf(match[0]) <= cursorChar &&
 				lineText.indexOf(match[0]) + match[0].length >= cursorChar,
 		);
+
 		if (!matches.length) {
 			matches = [...lineText.matchAll(italicRegexes[1])].filter(
 				(match) =>
@@ -445,10 +485,13 @@ function createOtherInlineRange(
 		// should only be one match, so select first and select group 1 for italics because that contains just the italic section
 		// doesn't include the leading and trailing characters which are guaranteed to not be * so as not to be confused with bold
 		const match = isItalic ? matches[0][1] : matches[0][0];
+
 		const startIndex = lineText.indexOf(match);
+
 		const cursorOnType =
 			cursorChar === startIndex ||
 			cursorChar === startIndex + match.length;
+
 		const contentAndType = makeSelectionRange(
 			lsp.Range.create(
 				cursorLine,
@@ -458,6 +501,7 @@ function createOtherInlineRange(
 			),
 			parent,
 		);
+
 		const content = makeSelectionRange(
 			lsp.Range.create(
 				cursorLine,
@@ -467,6 +511,7 @@ function createOtherInlineRange(
 			),
 			contentAndType,
 		);
+
 		return cursorOnType ? contentAndType : content;
 	}
 	return undefined;
@@ -479,6 +524,7 @@ function createLinkRange(
 	parent?: lsp.SelectionRange,
 ): lsp.SelectionRange | undefined {
 	const regex = /(\[[^\(\)]*\])(\([^\[\]]*\))/g;
+
 	const matches = [...lineText.matchAll(regex)].filter(
 		(match) =>
 			lineText.indexOf(match[0]) <= cursorChar &&
@@ -488,6 +534,7 @@ function createLinkRange(
 	if (matches.length) {
 		// should only be one match, so select first and index 0 contains the entire match, so match = [text](url)
 		const link = matches[0][0];
+
 		const linkRange = makeSelectionRange(
 			lsp.Range.create(
 				cursorLine,
@@ -499,6 +546,7 @@ function createLinkRange(
 		);
 
 		const linkText = matches[0][1];
+
 		const url = matches[0][2];
 
 		// determine if cursor is within [text] or (url) in order to know which should be selected
@@ -523,6 +571,7 @@ function createLinkRange(
 			),
 			linkRange,
 		);
+
 		const content = makeSelectionRange(
 			lsp.Range.create(
 				cursorLine,
@@ -532,6 +581,7 @@ function createLinkRange(
 			),
 			contentAndNearestType,
 		);
+
 		return cursorOnType ? contentAndNearestType : content;
 	}
 	return undefined;
@@ -562,6 +612,7 @@ function getFirstChildHeader(
 	toc?: readonly TocEntry[],
 ): lsp.Position | undefined {
 	let childRange: lsp.Position | undefined;
+
 	if (header && toc) {
 		const children = toc
 			.filter(
@@ -574,9 +625,12 @@ function getFirstChildHeader(
 						header.sectionLocation.range.start.line,
 			)
 			.sort((t1, t2) => t1.line - t2.line);
+
 		if (children.length > 0) {
 			childRange = children[0].sectionLocation.range.start;
+
 			const lineText = getLine(document, childRange.line - 1);
+
 			return childRange
 				? translatePosition(childRange, {
 						lineDelta: -1,

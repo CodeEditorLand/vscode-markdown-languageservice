@@ -88,12 +88,16 @@ function toSeverity(
 	switch (level) {
 		case DiagnosticLevel.error:
 			return lsp.DiagnosticSeverity.Error;
+
 		case DiagnosticLevel.warning:
 			return lsp.DiagnosticSeverity.Warning;
+
 		case DiagnosticLevel.hint:
 			return lsp.DiagnosticSeverity.Hint;
+
 		case DiagnosticLevel.ignore:
 			return undefined;
+
 		case undefined:
 			return undefined;
 	}
@@ -140,10 +144,12 @@ class FileLinkMap {
 			}
 
 			const existingFileEntry = this.#filesToLinksMap.get(link.href.path);
+
 			const linkData = {
 				source: link.source,
 				fragment: link.href.fragment,
 			};
+
 			if (existingFileEntry) {
 				existingFileEntry.outgoingLinks.push(linkData);
 			} else {
@@ -199,7 +205,9 @@ export class DiagnosticComputer {
 		});
 
 		const { links, definitions } = await this.#linkProvider.getLinks(doc);
+
 		const statCache = new ResourceMap<{ readonly exists: boolean }>();
+
 		if (token.isCancellationRequested) {
 			return { links, diagnostics: [], statCache };
 		}
@@ -241,16 +249,19 @@ export class DiagnosticComputer {
 		token: lsp.CancellationToken,
 	): Promise<lsp.Diagnostic[]> {
 		const severity = toSeverity(options.validateFragmentLinks);
+
 		if (typeof severity === "undefined") {
 			return [];
 		}
 
 		const toc = await this.#tocProvider.getForDocument(doc);
+
 		if (token.isCancellationRequested) {
 			return [];
 		}
 
 		const diagnostics: lsp.Diagnostic[] = [];
+
 		for (const link of links) {
 			if (link.href.kind === HrefKind.Internal
 				&& link.source.hrefText.startsWith('#')
@@ -289,6 +300,7 @@ export class DiagnosticComputer {
 		definitions: LinkDefinitionSet,
 	): Iterable<lsp.Diagnostic> {
 		const severity = toSeverity(options.validateReferences);
+
 		if (typeof severity === "undefined") {
 			return [];
 		}
@@ -319,11 +331,13 @@ export class DiagnosticComputer {
 		links: readonly MdLink[],
 	): Iterable<lsp.Diagnostic> {
 		const errorSeverity = toSeverity(options.validateUnusedLinkDefinitions);
+
 		if (typeof errorSeverity === "undefined") {
 			return;
 		}
 
 		const usedRefs = new ReferenceLinkMap<boolean>();
+
 		for (const link of links) {
 			if (
 				link.kind === MdLinkKind.Link &&
@@ -357,14 +371,17 @@ export class DiagnosticComputer {
 		const errorSeverity = toSeverity(
 			options.validateDuplicateLinkDefinitions,
 		);
+
 		if (typeof errorSeverity === "undefined") {
 			return;
 		}
 
 		const definitionMultiMap = new Map<string, MdLinkDefinition[]>();
+
 		for (const link of links) {
 			if (link.kind === MdLinkKind.Definition) {
 				const existing = definitionMultiMap.get(link.ref.text);
+
 				if (existing) {
 					existing.push(link);
 				} else {
@@ -411,6 +428,7 @@ export class DiagnosticComputer {
 		token: lsp.CancellationToken,
 	): Promise<lsp.Diagnostic[]> {
 		const pathErrorSeverity = toSeverity(options.validateFileLinks);
+
 		if (typeof pathErrorSeverity === "undefined") {
 			return [];
 		}
@@ -424,6 +442,7 @@ export class DiagnosticComputer {
 		const linkSet = new FileLinkMap(
 			links.filter((link) => !link.source.hrefText.startsWith("#")),
 		);
+
 		if (linkSet.size === 0) {
 			return [];
 		}
@@ -445,6 +464,7 @@ export class DiagnosticComputer {
 							path,
 							statCache,
 						);
+
 						if (token.isCancellationRequested) {
 							return;
 						}
@@ -474,11 +494,13 @@ export class DiagnosticComputer {
 							const fragmentLinks = links.filter(
 								(x) => x.fragment,
 							);
+
 							if (fragmentLinks.length) {
 								const toc =
 									await this.#tocProvider.get(
 										resolvedHrefPath,
 									);
+
 								if (token.isCancellationRequested) {
 									return;
 								}
@@ -538,6 +560,7 @@ export class DiagnosticComputer {
 				},
 			),
 		);
+
 		return diagnostics;
 	}
 
@@ -663,6 +686,7 @@ class FileLinkState extends Disposable {
 		// Then create/update watchers for new document state
 		for (const { path, exists } of linkedToResource) {
 			let entry = this.#linkedToFile.get(path);
+
 			if (!entry) {
 				entry = {
 					watcher: this.#startWatching(path),
@@ -690,6 +714,7 @@ class FileLinkState extends Disposable {
 
 	public tryStatFileLink(link: URI): { exists: boolean } | undefined {
 		const entry = this.#linkedToFile.get(link);
+
 		if (!entry) {
 			return undefined;
 		}
@@ -698,12 +723,15 @@ class FileLinkState extends Disposable {
 
 	#startWatching(path: URI): IDisposable {
 		const watcher = this.#workspace.watchFile(path, { ignoreChange: true });
+
 		const deleteReg = watcher.onDidDelete((resource: URI) =>
 			this.#onLinkedResourceChanged(resource, false),
 		);
+
 		const createReg = watcher.onDidCreate((resource: URI) =>
 			this.#onLinkedResourceChanged(resource, true),
 		);
+
 		return {
 			dispose: () => {
 				watcher.dispose();
@@ -721,6 +749,7 @@ class FileLinkState extends Disposable {
 		);
 
 		const entry = this.#linkedToFile.get(resource);
+
 		if (entry) {
 			entry.exists = exists;
 			this.#onDidChangeLinkedToFile.fire({
@@ -778,6 +807,7 @@ export class DiagnosticsManager
 			get(target, p, receiver) {
 				if (p !== "stat") {
 					const value = Reflect.get(target, p, receiver);
+
 					return typeof value === "function"
 						? value.bind(workspace)
 						: value;
@@ -788,6 +818,7 @@ export class DiagnosticsManager
 					resource: URI,
 				): Promise<FileStat | undefined> {
 					const stat = linkWatcher.tryStatFileLink(resource);
+
 					if (stat) {
 						if (stat.exists) {
 							return { isDirectory: false };
@@ -824,6 +855,7 @@ export class DiagnosticsManager
 		token: lsp.CancellationToken,
 	): Promise<lsp.Diagnostic[]> {
 		const results = await this.#computer.compute(doc, options, token);
+
 		if (token.isCancellationRequested) {
 			return [];
 		}
@@ -833,6 +865,7 @@ export class DiagnosticsManager
 			results.links,
 			results.statCache,
 		);
+
 		return results.diagnostics;
 	}
 

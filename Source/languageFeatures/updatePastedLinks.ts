@@ -23,6 +23,7 @@ import { MdLinkProvider } from "./documentLinks";
 class PasteLinksCopyMetadata {
 	static fromJSON(json: string): PasteLinksCopyMetadata {
 		const obj = JSON.parse(json);
+
 		return new PasteLinksCopyMetadata(
 			URI.parse(obj.source),
 			new LinkDefinitionSet(obj.links),
@@ -57,6 +58,7 @@ export class MdUpdatePastedLinksProvider {
 		token: lsp.CancellationToken,
 	): Promise<string> {
 		const linkInfo = await this.#linkProvider.getLinks(document);
+
 		if (token.isCancellationRequested) {
 			return "";
 		}
@@ -65,6 +67,7 @@ export class MdUpdatePastedLinksProvider {
 			getDocUri(document),
 			linkInfo.definitions,
 		);
+
 		return metadata.toJSON();
 	}
 
@@ -75,6 +78,7 @@ export class MdUpdatePastedLinksProvider {
 		token: lsp.CancellationToken,
 	): Promise<lsp.TextEdit[] | undefined> {
 		const metadata = this.#parseMetadata(rawCopyMetadata);
+
 		if (!metadata) {
 			return;
 		}
@@ -112,6 +116,7 @@ export class MdUpdatePastedLinksProvider {
 			editedDoc,
 			token,
 		);
+
 		if (token.isCancellationRequested) {
 			return;
 		}
@@ -144,7 +149,9 @@ export class MdUpdatePastedLinksProvider {
 
 		// Generate edits
 		const newDefinitionsToAdd: MdLinkDefinition[] = [];
+
 		const rewriteLinksEdits: lsp.TextEdit[] = [];
+
 		for (const link of linksToRewrite) {
 			if (link.href.kind === HrefKind.Reference) {
 				// See if we've already added the def
@@ -157,6 +164,7 @@ export class MdUpdatePastedLinksProvider {
 				}
 
 				const originalRef = metadata.links?.lookup(link.href.ref);
+
 				if (!originalRef) {
 					continue;
 				}
@@ -172,6 +180,7 @@ export class MdUpdatePastedLinksProvider {
 				newDefinitionsToAdd.push(originalRef);
 			} else if (link.href.kind === HrefKind.Internal) {
 				const targetDocUri = getDocUri(targetDocument);
+
 				const newPathText = isSameResource(targetDocUri, link.href.path)
 					? ""
 					: computeRelativePath(
@@ -188,6 +197,7 @@ export class MdUpdatePastedLinksProvider {
 				}
 
 				let newHrefText = newPathText;
+
 				if (link.source.fragmentRange) {
 					newHrefText += "#" + link.href.fragment;
 				}
@@ -210,14 +220,17 @@ export class MdUpdatePastedLinksProvider {
 
 		// Generate a minimal set of edits for the pastes
 		const outEdits: lsp.TextEdit[] = [];
+
 		const finalDoc = new InMemoryDocument(
 			editedDoc.$uri,
 			editedDoc.previewEdits(rewriteLinksEdits),
 		);
 
 		let offsetAdjustment = 0;
+
 		for (let i = 0; i < pastedRanges.length; ++i) {
 			const pasteRange = pastedRanges[i];
+
 			const originalPaste = sortedPastes[i];
 
 			// Adjust the range to account for the `rewriteLinksEdits`
@@ -259,6 +272,7 @@ export class MdUpdatePastedLinksProvider {
 		if (newDefinitionsToAdd.length) {
 			const targetLinks =
 				await this.#linkProvider.getLinks(targetDocument);
+
 			if (token.isCancellationRequested) {
 				return;
 			}
@@ -295,10 +309,12 @@ export class MdUpdatePastedLinksProvider {
 		const pastedRanges: lsp.Range[] = [];
 
 		let offsetAdjustment = 0;
+
 		for (const paste of sortedPastes) {
 			const originalStartOffset = targetDocument.offsetAt(
 				paste.range.start,
 			);
+
 			const originalEndOffset = targetDocument.offsetAt(paste.range.end);
 
 			pastedRanges.push(

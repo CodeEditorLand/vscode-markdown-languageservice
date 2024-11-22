@@ -114,6 +114,7 @@ export class MdRenameProvider {
 			position,
 			token,
 		);
+
 		if (token.isCancellationRequested) {
 			return undefined;
 		}
@@ -123,6 +124,7 @@ export class MdRenameProvider {
 		}
 
 		const triggerRef = allRefsInfo.triggerRef;
+
 		switch (triggerRef.kind) {
 			case MdReferenceKind.Header: {
 				return {
@@ -152,10 +154,12 @@ export class MdRenameProvider {
 
 				// See if we are renaming the fragment or the path
 				const { fragmentRange } = triggerRef.link.source;
+
 				if (fragmentRange && rangeContains(fragmentRange, position)) {
 					const declaration = this.#findHeaderDeclaration(
 						allRefsInfo.references,
 					);
+
 					return {
 						range: fragmentRange,
 						placeholder: declaration
@@ -165,6 +169,7 @@ export class MdRenameProvider {
 				}
 
 				const range = getFilePathRange(triggerRef.link);
+
 				if (!range) {
 					throw new RenameNotSupportedAtLocationError();
 				}
@@ -200,6 +205,7 @@ export class MdRenameProvider {
 			position,
 			token,
 		);
+
 		if (
 			token.isCancellationRequested ||
 			!allRefsInfo ||
@@ -269,6 +275,7 @@ export class MdRenameProvider {
 				this.#workspace,
 				triggerHref.path,
 			)) ?? triggerHref.path;
+
 		if (token.isCancellationRequested) {
 			return builder.getEdit();
 		}
@@ -278,11 +285,13 @@ export class MdRenameProvider {
 			newName,
 			this.#workspace,
 		);
+
 		if (!rawNewFilePath) {
 			return builder.getEdit();
 		}
 
 		let resolvedNewFilePath = rawNewFilePath.resource;
+
 		if (!Utils.extname(resolvedNewFilePath)) {
 			// If the newly entered path doesn't have a file extension but the original link did
 			// tack on a .md file extension
@@ -339,11 +348,13 @@ export class MdRenameProvider {
 		token: lsp.CancellationToken,
 	): Promise<lsp.WorkspaceEdit | undefined> {
 		const builder = new WorkspaceEditBuilder();
+
 		let newSlug = this.#slugifier.fromHeading(newHeaderText);
 
 		const existingHeader = allRefsInfo.references.find(
 			(x) => x.kind === MdReferenceKind.Header,
 		);
+
 		if (existingHeader) {
 			// If there's a real header we're renaming, we need to handle cases where there are duplicate header ids.
 			// There are two cases of this to consider:
@@ -366,6 +377,7 @@ export class MdRenameProvider {
 			const doc = await this.#workspace.openMarkdownDocument(
 				URI.parse(existingHeader.location.uri),
 			);
+
 			if (token.isCancellationRequested) {
 				return;
 			}
@@ -386,6 +398,7 @@ export class MdRenameProvider {
 					this.#tableOfContentProvider.getForDocument(doc),
 					TableOfContents.create(this.#parser, editedDoc, token), // Don't use cache for new temp doc
 				]);
+
 				if (token.isCancellationRequested) {
 					return;
 				}
@@ -393,6 +406,7 @@ export class MdRenameProvider {
 				const changedHeaders: TocEntry[] = [];
 				oldToc.entries.forEach((oldEntry, index) => {
 					const newEntry = newToc.entries[index];
+
 					if (!newEntry) {
 						return;
 					}
@@ -416,6 +430,7 @@ export class MdRenameProvider {
 						changedHeader.headerLocation.range.start,
 						token,
 					);
+
 					if (token.isCancellationRequested) {
 						return;
 					}
@@ -442,6 +457,7 @@ export class MdRenameProvider {
 						ref.headerTextLocation.range,
 						newHeaderText,
 					);
+
 					break;
 
 				case MdReferenceKind.Link:
@@ -453,6 +469,7 @@ export class MdRenameProvider {
 							? newHeaderText
 							: newSlug.value,
 					);
+
 					break;
 			}
 		}
@@ -464,6 +481,7 @@ export class MdRenameProvider {
 		newName: string,
 	): lsp.WorkspaceEdit {
 		const builder = new WorkspaceEditBuilder();
+
 		for (const ref of allRefsInfo.references) {
 			if (ref.kind === MdReferenceKind.Link) {
 				builder.replace(
@@ -525,11 +543,13 @@ export class MdRenameProvider {
 				position,
 				token,
 			);
+
 		if (token.isCancellationRequested) {
 			return;
 		}
 
 		const triggerRef = references.find((ref) => ref.isTriggerLocation);
+
 		if (!triggerRef) {
 			return undefined;
 		}
@@ -541,6 +561,7 @@ export class MdRenameProvider {
 			references,
 			triggerRef,
 		};
+
 		return this.#cachedRefs;
 	}
 }
@@ -557,6 +578,7 @@ export function getLinkRenameText(
 			"/",
 			workspace,
 		);
+
 		if (!root) {
 			return undefined;
 		}

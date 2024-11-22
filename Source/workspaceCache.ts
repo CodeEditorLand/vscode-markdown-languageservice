@@ -59,17 +59,20 @@ export class MdDocumentInfoCache<T> extends Disposable {
 
 	public async get(resource: URI): Promise<T | undefined> {
 		let existing = this.#cache.get(resource);
+
 		if (existing) {
 			return existing.value.value;
 		}
 
 		const doc = await this.#loadDocument(resource);
+
 		if (!doc) {
 			return undefined;
 		}
 
 		// Check if we have invalidated
 		existing = this.#cache.get(resource);
+
 		if (existing) {
 			return existing.value.value;
 		}
@@ -79,6 +82,7 @@ export class MdDocumentInfoCache<T> extends Disposable {
 
 	public getForDocument(document: ITextDocument): Promise<T> {
 		const existing = this.#cache.get(getDocUri(document));
+
 		if (existing) {
 			return existing.value.value;
 		}
@@ -87,6 +91,7 @@ export class MdDocumentInfoCache<T> extends Disposable {
 
 	#loadDocument(resource: URI): Promise<ITextDocument | undefined> {
 		const existing = this.#loadingDocuments.get(resource);
+
 		if (existing) {
 			return existing;
 		}
@@ -96,6 +101,7 @@ export class MdDocumentInfoCache<T> extends Disposable {
 		p.finally(() => {
 			this.#loadingDocuments.delete(resource);
 		});
+
 		return p;
 	}
 
@@ -103,8 +109,10 @@ export class MdDocumentInfoCache<T> extends Disposable {
 		// TODO: cancel old request?
 
 		const cts = new CancellationTokenSource();
+
 		const value = lazy(() => this.#getValue(document, cts.token));
 		this.#cache.set(getDocUri(document), { value, cts });
+
 		return value;
 	}
 
@@ -116,6 +124,7 @@ export class MdDocumentInfoCache<T> extends Disposable {
 
 	#onDidDeleteDocument(resource: URI) {
 		const entry = this.#cache.get(resource);
+
 		if (entry) {
 			entry.cts.cancel();
 			entry.cts.dispose();
@@ -179,6 +188,7 @@ export class MdWorkspaceInfoCache<T> extends Disposable {
 
 	public async values(): Promise<Array<T>> {
 		await this.#ensureInit();
+
 		return Promise.all(
 			Array.from(this.#cache.entries(), (x) => x[1].value.value),
 		);
@@ -206,6 +216,7 @@ export class MdWorkspaceInfoCache<T> extends Disposable {
 	async #populateCache(): Promise<void> {
 		const markdownDocuments =
 			await this.#workspace.getAllMarkdownDocuments();
+
 		for (const document of markdownDocuments) {
 			if (!this.#cache.has(getDocUri(document))) {
 				this.#update(document);
@@ -229,6 +240,7 @@ export class MdWorkspaceInfoCache<T> extends Disposable {
 
 	#onDidDeleteDocument(resource: URI) {
 		const entry = this.#cache.get(resource);
+
 		if (entry) {
 			entry.cts.cancel();
 			entry.cts.dispose();

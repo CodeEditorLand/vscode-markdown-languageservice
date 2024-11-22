@@ -191,11 +191,13 @@ export class MdPathCompletionProvider {
 		token: CancellationToken,
 	): Promise<lsp.CompletionItem[]> {
 		const pathContext = this.#getPathCompletionContext(document, position);
+
 		if (!pathContext) {
 			return [];
 		}
 
 		const items: lsp.CompletionItem[] = [];
+
 		for await (const item of this.#provideCompletionItems(
 			document,
 			position,
@@ -223,6 +225,7 @@ export class MdPathCompletionProvider {
 					context,
 					token,
 				);
+
 				return;
 			}
 			case CompletionContextKind.LinkDefinition:
@@ -242,6 +245,7 @@ export class MdPathCompletionProvider {
 						context.linkTextStartPosition,
 						position,
 					);
+
 					yield* this.#provideWorkspaceHeaderSuggestions(
 						document,
 						position,
@@ -249,6 +253,7 @@ export class MdPathCompletionProvider {
 						insertRange,
 						token,
 					);
+
 					return;
 				}
 
@@ -262,6 +267,7 @@ export class MdPathCompletionProvider {
 						context.linkTextStartPosition,
 						position,
 					);
+
 					yield* this.#provideHeaderSuggestions(
 						document,
 						position,
@@ -282,12 +288,14 @@ export class MdPathCompletionProvider {
 							document,
 							context.anchorInfo.beforeAnchor,
 						);
+
 						if (rawUri) {
 							const otherDoc = await openLinkToMarkdownFile(
 								this.#configuration,
 								this.#workspace,
 								rawUri,
 							);
+
 							if (token.isCancellationRequested) {
 								return;
 							}
@@ -302,10 +310,12 @@ export class MdPathCompletionProvider {
 										),
 									},
 								);
+
 								const range = lsp.Range.create(
 									anchorStartPosition,
 									position,
 								);
+
 								yield* this.#provideHeaderSuggestions(
 									otherDoc,
 									position,
@@ -362,15 +372,18 @@ export class MdPathCompletionProvider {
 		const line = getLine(document, position.line);
 
 		const linePrefixText = line.slice(0, position.character);
+
 		const lineSuffixText = line.slice(position.character);
 
 		const htmlAttributePrefixMatch = linePrefixText.match(
 			this.#htmlAttributeStartPattern,
 		);
+
 		if (htmlAttributePrefixMatch?.groups) {
 			const validPathAttrs = htmlTagPathAttrs.get(
 				htmlAttributePrefixMatch.groups.tag.toUpperCase(),
 			);
+
 			if (
 				!validPathAttrs ||
 				!validPathAttrs.some(
@@ -383,11 +396,13 @@ export class MdPathCompletionProvider {
 			}
 
 			const prefix = htmlAttributePrefixMatch.groups.link;
+
 			if (this.#refLooksLikeUrl(prefix)) {
 				return undefined;
 			}
 
 			const suffix = lineSuffixText.match(/^[^\s'"]*/);
+
 			return this.#createCompletionContext(
 				CompletionContextKind.HtmlAttribute,
 				position,
@@ -398,14 +413,18 @@ export class MdPathCompletionProvider {
 		}
 
 		const linkPrefixMatch = linePrefixText.match(this.#linkStartPattern);
+
 		if (linkPrefixMatch) {
 			const isAngleBracketLink = linkPrefixMatch[1].startsWith("<");
+
 			const prefix = linkPrefixMatch[1].slice(isAngleBracketLink ? 1 : 0);
+
 			if (this.#refLooksLikeUrl(prefix)) {
 				return undefined;
 			}
 
 			const suffix = lineSuffixText.match(/^[^\)\s][^\)\s\>]*/);
+
 			return this.#createCompletionContext(
 				CompletionContextKind.Link,
 				position,
@@ -418,17 +437,21 @@ export class MdPathCompletionProvider {
 		const definitionLinkPrefixMatch = linePrefixText.match(
 			this.#definitionPattern,
 		);
+
 		if (definitionLinkPrefixMatch) {
 			const isAngleBracketLink =
 				definitionLinkPrefixMatch[1].startsWith("<");
+
 			const prefix = definitionLinkPrefixMatch[1].slice(
 				isAngleBracketLink ? 1 : 0,
 			);
+
 			if (this.#refLooksLikeUrl(prefix)) {
 				return undefined;
 			}
 
 			const suffix = lineSuffixText.match(/^[^\s]*/);
+
 			return this.#createCompletionContext(
 				CompletionContextKind.LinkDefinition,
 				position,
@@ -441,9 +464,12 @@ export class MdPathCompletionProvider {
 		const referenceLinkPrefixMatch = linePrefixText.match(
 			this.#referenceLinkStartPattern,
 		);
+
 		if (referenceLinkPrefixMatch) {
 			const prefix = referenceLinkPrefixMatch[2];
+
 			const suffix = lineSuffixText.match(/^[^\]\s]*/);
+
 			return {
 				kind: CompletionContextKind.ReferenceLink,
 				linkPrefix: prefix,
@@ -485,6 +511,7 @@ export class MdPathCompletionProvider {
 
 	#getAnchorContext(prefix: string): AnchorContext | undefined {
 		const anchorMatch = prefix.match(/^(.*)#([\w\d\-]*)$/);
+
 		if (!anchorMatch) {
 			return undefined;
 		}
@@ -504,6 +531,7 @@ export class MdPathCompletionProvider {
 			context.linkTextStartPosition,
 			position,
 		);
+
 		const replacementRange = lsp.Range.create(
 			insertionRange.start,
 			translatePosition(position, {
@@ -512,6 +540,7 @@ export class MdPathCompletionProvider {
 		);
 
 		const { definitions } = await this.#linkProvider.getLinks(document);
+
 		if (token.isCancellationRequested) {
 			return;
 		}
@@ -543,6 +572,7 @@ export class MdPathCompletionProvider {
 			document,
 			token,
 		);
+
 		if (token.isCancellationRequested) {
 			return;
 		}
@@ -553,6 +583,7 @@ export class MdPathCompletionProvider {
 				characterDelta: context.linkSuffix.length,
 			}),
 		);
+
 		for (const entry of toc.entries) {
 			const completionItem = this.#createHeaderCompletion(
 				entry,
@@ -560,6 +591,7 @@ export class MdPathCompletionProvider {
 				replacementRange,
 			);
 			completionItem.labelDetails = {};
+
 			yield completionItem;
 		}
 	}
@@ -571,7 +603,9 @@ export class MdPathCompletionProvider {
 		filePath = "",
 	): lsp.CompletionItem {
 		const label = "#" + decodeURIComponent(entry.slug.value);
+
 		const newText = filePath + "#" + decodeURIComponent(entry.slug.value);
+
 		return {
 			kind: lsp.CompletionItemKind.Reference,
 			label,
@@ -602,6 +636,7 @@ export class MdPathCompletionProvider {
 		token: CancellationToken,
 	): AsyncIterable<lsp.CompletionItem> {
 		const tocs = await this.#workspaceTocCache.entries();
+
 		if (token.isCancellationRequested) {
 			return;
 		}
@@ -612,6 +647,7 @@ export class MdPathCompletionProvider {
 				characterDelta: context.linkSuffix.length,
 			}),
 		);
+
 		for (const [toDoc, toc] of tocs) {
 			const isHeaderInCurrentDocument = isSameResource(
 				toDoc,
@@ -621,12 +657,15 @@ export class MdPathCompletionProvider {
 			const rawPath = isHeaderInCurrentDocument
 				? ""
 				: computeRelativePath(getDocUri(document), toDoc);
+
 			if (typeof rawPath === "undefined") {
 				continue;
 			}
 
 			const normalizedPath = this.#normalizeFileNameCompletion(rawPath);
+
 			const path = this.#getPathInsertText(context, normalizedPath);
+
 			for (const entry of toc.entries) {
 				const completionItem = this.#createHeaderCompletion(
 					entry,
@@ -669,6 +708,7 @@ export class MdPathCompletionProvider {
 			document,
 			valueBeforeLastSlash || ".",
 		);
+
 		if (!parentDir) {
 			return;
 		}
@@ -677,17 +717,20 @@ export class MdPathCompletionProvider {
 			characterDelta:
 				valueBeforeLastSlash.length - context.linkPrefix.length,
 		});
+
 		const insertRange = lsp.Range.create(pathSegmentStart, position);
 
 		const pathSegmentEnd = translatePosition(position, {
 			characterDelta: context.linkSuffix.length,
 		});
+
 		const replacementRange = lsp.Range.create(
 			pathSegmentStart,
 			pathSegmentEnd,
 		);
 
 		let dirInfo: Iterable<readonly [string, FileStat]>;
+
 		try {
 			dirInfo = await this.#workspace.readDirectory(parentDir);
 		} catch {
@@ -701,6 +744,7 @@ export class MdPathCompletionProvider {
 		// eslint-disable-next-line prefer-const
 		for (let [name, type] of dirInfo) {
 			const uri = Utils.joinPath(parentDir, name);
+
 			if (isExcludedPath(this.#configuration, uri)) {
 				continue;
 			}
@@ -710,9 +754,12 @@ export class MdPathCompletionProvider {
 			}
 
 			const isDir = type.isDirectory;
+
 			const newText =
 				this.#getPathInsertText(context, name) + (isDir ? "/" : "");
+
 			const label = isDir ? name + "/" : name;
+
 			yield {
 				label,
 				kind: isDir
@@ -739,13 +786,16 @@ export class MdPathCompletionProvider {
 
 		if (!stat.isDirectory) {
 			const maxMediaWidth = 300;
+
 			switch (getMediaPreviewType(uri)) {
 				case MediaType.Image: {
 					documentation += `\n\n${mdBuilder.imageLink(uri, "Linked image", maxMediaWidth)}`;
+
 					break;
 				}
 				case MediaType.Video: {
 					documentation += `\n\n${mdBuilder.video(uri, maxMediaWidth)}`;
+
 					break;
 				}
 			}
@@ -795,6 +845,7 @@ export class MdPathCompletionProvider {
 
 		if (ref.startsWith("/")) {
 			const workspaceFolder = getWorkspaceFolder(this.#workspace, docUri);
+
 			if (workspaceFolder) {
 				return Utils.joinPath(workspaceFolder, ref);
 			} else {

@@ -35,11 +35,13 @@ export class MdWorkspaceSymbolProvider extends Disposable {
 		token: lsp.CancellationToken,
 	): Promise<lsp.WorkspaceSymbol[]> {
 		const allSymbols = await this.#cache.values();
+
 		if (token.isCancellationRequested) {
 			return [];
 		}
 
 		const normalizedQueryStr = query.toLowerCase();
+
 		return allSymbols.flat().filter((symbolInformation) => {
 			return fuzzyContains(
 				symbolInformation.name.toLowerCase(),
@@ -57,6 +59,7 @@ export class MdWorkspaceSymbolProvider extends Disposable {
 			{},
 			token,
 		);
+
 		if (token.isCancellationRequested) {
 			return [];
 		}
@@ -73,6 +76,7 @@ export class MdWorkspaceSymbolProvider extends Disposable {
 				kind: lsp.SymbolKind.String,
 				location: { uri, range: symbol.selectionRange },
 			};
+
 			if (symbol.children) {
 				yield* this.#toSymbolInformation(uri, symbol.children);
 			}
