@@ -46,23 +46,33 @@ import { ITextDocument } from "./types/textDocument";
 import { isWorkspaceWithFileWatching, IWorkspace } from "./workspace";
 
 export { LsConfiguration, PreferredMdPathExtensionStyle } from "./config";
+
 export {
 	DiagnosticCode,
 	DiagnosticLevel,
 	DiagnosticOptions,
 	IPullDiagnosticsManager,
 } from "./languageFeatures/diagnostics";
+
 export { ResolvedDocumentLinkTarget } from "./languageFeatures/documentLinks";
+
 export { FileRename } from "./languageFeatures/fileRename";
+
 export {
 	IncludeWorkspaceHeaderCompletions,
 	PathCompletionOptions as MdPathCompletionOptions,
 } from "./languageFeatures/pathCompletions";
+
 export { RenameNotSupportedAtLocationError } from "./languageFeatures/rename";
+
 export { ILogger, LogLevel } from "./logging";
+
 export { IMdParser, Token } from "./parser";
+
 export { githubSlugifier, ISlug, ISlugifier } from "./slugify";
+
 export { ITextDocument } from "./types/textDocument";
+
 export {
 	ContainingDocumentContext,
 	FileStat,
