@@ -8,6 +8,7 @@ import { URI } from "vscode-uri";
 
 export class WorkspaceEditBuilder {
 	readonly #changes: { [uri: lsp.DocumentUri]: lsp.TextEdit[] } = {};
+
 	readonly #documentChanges: Array<
 		lsp.CreateFile | lsp.RenameFile | lsp.DeleteFile
 	> = [];
@@ -27,6 +28,7 @@ export class WorkspaceEditBuilder {
 
 		if (!edits) {
 			edits = [];
+
 			this.#changes![resourceKey] = edits;
 		}
 

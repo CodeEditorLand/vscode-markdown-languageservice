@@ -18,8 +18,11 @@ import { MdLinkProvider } from "./documentLinks";
 
 interface MarkdownSymbol {
 	readonly level: number;
+
 	readonly parent: MarkdownSymbol | undefined;
+
 	readonly children: lsp.DocumentSymbol[];
+
 	readonly range: lsp.Range;
 }
 
@@ -29,7 +32,9 @@ export interface ProvideDocumentSymbolOptions {
 
 export class MdDocumentSymbolProvider {
 	readonly #tocProvider: MdTableOfContentsProvider;
+
 	readonly #linkProvider: MdLinkProvider;
+
 	readonly #logger: ILogger;
 
 	constructor(
@@ -38,7 +43,9 @@ export class MdDocumentSymbolProvider {
 		logger: ILogger,
 	) {
 		this.#tocProvider = tocProvider;
+
 		this.#linkProvider = linkProvider;
+
 		this.#logger = logger;
 	}
 
@@ -83,6 +90,7 @@ export class MdDocumentSymbolProvider {
 		};
 
 		const additionalSymbols = [...linkSymbols];
+
 		this.#buildTocSymbolTree(root, toc.entries, additionalSymbols);
 		// Put remaining link definitions into top level document instead of last header
 		root.children.push(...additionalSymbols);
@@ -145,7 +153,9 @@ export class MdDocumentSymbolProvider {
 			}
 
 			const symbol = this.#tocToDocumentSymbol(entry);
+
 			symbol.children = [];
+
 			parent.children.push(symbol);
 
 			parent = {

@@ -65,12 +65,14 @@ export class MdOrganizeLinkDefinitionProvider {
 
 		// Then replace the actual block
 		const sortedDefs = [...definitions];
+
 		sortedDefs.sort((a, b) => a.ref.text.localeCompare(b.ref.text));
 
 		const newDefs = sortedDefs.filter((def) => {
 			if (!options.removeUnused) {
 				return true;
 			}
+
 			return links.links.some((link) => {
 				return (
 					link.kind === MdLinkKind.Link &&
@@ -112,6 +114,7 @@ export class MdOrganizeLinkDefinitionProvider {
 			});
 		} else {
 			const line = this.#getLastNonWhitespaceLine(doc, definitions);
+
 			edits.push({
 				newText:
 					(line === doc.lineCount - 1 ? "\n\n" : "\n") + defBlock,
@@ -210,8 +213,10 @@ export function getExistingDefinitionBlock(
 			) {
 				break;
 			}
+
 			prevDef = def;
 		}
+
 		return {
 			startLine: prevDef.source.range.start.line,
 			endLine: lastDef.source.range.start.line,

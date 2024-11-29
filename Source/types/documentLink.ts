@@ -13,17 +13,21 @@ export enum HrefKind {
 
 export interface ExternalHref {
 	readonly kind: HrefKind.External;
+
 	readonly uri: URI;
 }
 
 export interface InternalHref {
 	readonly kind: HrefKind.Internal;
+
 	readonly path: URI;
+
 	readonly fragment: string;
 }
 
 export interface ReferenceHref {
 	readonly kind: HrefKind.Reference;
+
 	readonly ref: string;
 }
 
@@ -96,23 +100,31 @@ export enum MdLinkKind {
 
 export interface MdInlineLink<HrefType = LinkHref> {
 	readonly kind: MdLinkKind.Link;
+
 	readonly source: MdLinkSource;
+
 	readonly href: HrefType;
 }
 
 export interface MdLinkDefinition {
 	readonly kind: MdLinkKind.Definition;
+
 	readonly source: MdLinkSource;
+
 	readonly ref: {
 		readonly range: lsp.Range;
+
 		readonly text: string;
 	};
+
 	readonly href: ExternalHref | InternalHref;
 }
 
 export interface MdAutoLink {
 	readonly kind: MdLinkKind.AutoLink;
+
 	readonly source: MdLinkSource;
+
 	readonly href: ExternalHref;
 }
 

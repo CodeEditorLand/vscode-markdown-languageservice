@@ -8,9 +8,13 @@ import { ITextDocument } from "./types/textDocument";
 
 export interface Token {
 	readonly type: string;
+
 	readonly markup: string;
+
 	readonly content: string;
+
 	readonly map: number[] | null;
+
 	readonly children: readonly Token[] | null;
 }
 

@@ -258,6 +258,7 @@ export interface IMdLanguageService {
 	): Promise<
 		| {
 				participatingRenames: readonly FileRename[];
+
 				edit: lsp.WorkspaceEdit;
 		  }
 		| undefined
@@ -501,9 +502,13 @@ export function createLanguageService(
 	return Object.freeze<IMdLanguageService>({
 		dispose: () => {
 			linkCache.dispose();
+
 			tocProvider.dispose();
+
 			workspaceSymbolProvider.dispose();
+
 			linkProvider.dispose();
+
 			referencesProvider.dispose();
 		},
 		getDocumentLinks: linkProvider.provideDocumentLinks.bind(linkProvider),
@@ -608,6 +613,7 @@ export function createLanguageService(
 					`Workspace does not support file watching. Diagnostics manager not supported`,
 				);
 			}
+
 			return new DiagnosticsManager(
 				config,
 				init.workspace,

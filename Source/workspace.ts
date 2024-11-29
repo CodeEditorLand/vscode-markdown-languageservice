@@ -229,6 +229,7 @@ export async function statLinkToMarkdownFile(
 ): Promise<URI | undefined> {
 	const exists = async (uri: URI): Promise<boolean> => {
 		const result = await workspace.stat(uri);
+
 		out_statCache?.set(uri, { exists: !!result });
 
 		return !!result;

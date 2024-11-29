@@ -28,7 +28,9 @@ import { getFilePathRange } from "./rename";
 
 export class MdDocumentHighlightProvider {
 	readonly #configuration: LsConfiguration;
+
 	readonly #tocProvider: MdTableOfContentsProvider;
+
 	readonly #linkProvider: MdLinkProvider;
 
 	constructor(
@@ -37,7 +39,9 @@ export class MdDocumentHighlightProvider {
 		linkProvider: MdLinkProvider,
 	) {
 		this.#configuration = configuration;
+
 		this.#tocProvider = tocProvider;
+
 		this.#linkProvider = linkProvider;
 	}
 
@@ -140,6 +144,7 @@ export class MdDocumentHighlightProvider {
 			case HrefKind.Reference: {
 				return this.#getHighlightsForReference(link.href.ref, links);
 			}
+
 			case HrefKind.Internal: {
 				if (
 					link.source.fragmentRange &&
@@ -155,6 +160,7 @@ export class MdDocumentHighlightProvider {
 
 				return this.#getHighlightsForLinkPath(link.href.path, links);
 			}
+
 			case HrefKind.External: {
 				return this.#getHighlightsForExternalLink(link.href.uri, links);
 			}

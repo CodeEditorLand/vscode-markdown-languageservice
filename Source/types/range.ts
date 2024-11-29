@@ -30,6 +30,7 @@ export function rangeContains(range: Range, other: Position | Range): boolean {
 			rangeContains(range, other.start) && rangeContains(range, other.end)
 		);
 	}
+
 	return !isBefore(other, range.start) && !isBefore(range.end, other);
 }
 

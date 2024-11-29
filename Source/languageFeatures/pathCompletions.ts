@@ -161,8 +161,11 @@ const sortTexts = Object.freeze({
  */
 export class MdPathCompletionProvider {
 	readonly #configuration: LsConfiguration;
+
 	readonly #workspace: IWorkspace;
+
 	readonly #parser: IMdParser;
+
 	readonly #linkProvider: MdLinkProvider;
 
 	readonly #workspaceTocCache: MdWorkspaceInfoCache<TableOfContents>;
@@ -175,8 +178,11 @@ export class MdPathCompletionProvider {
 		tocProvider: MdTableOfContentsProvider,
 	) {
 		this.#configuration = configuration;
+
 		this.#workspace = workspace;
+
 		this.#parser = parser;
+
 		this.#linkProvider = linkProvider;
 
 		this.#workspaceTocCache = new MdWorkspaceInfoCache(workspace, (doc) =>
@@ -207,6 +213,7 @@ export class MdPathCompletionProvider {
 		)) {
 			items.push(item);
 		}
+
 		return items;
 	}
 
@@ -228,6 +235,7 @@ export class MdPathCompletionProvider {
 
 				return;
 			}
+
 			case CompletionContextKind.LinkDefinition:
 			case CompletionContextKind.Link:
 			case CompletionContextKind.HtmlAttribute: {
@@ -335,6 +343,7 @@ export class MdPathCompletionProvider {
 						);
 					}
 				}
+
 				return;
 			}
 		}
@@ -515,6 +524,7 @@ export class MdPathCompletionProvider {
 		if (!anchorMatch) {
 			return undefined;
 		}
+
 		return {
 			beforeAnchor: anchorMatch[1],
 			anchorPrefix: anchorMatch[2],
@@ -590,6 +600,7 @@ export class MdPathCompletionProvider {
 				insertionRange,
 				replacementRange,
 			);
+
 			completionItem.labelDetails = {};
 
 			yield completionItem;
@@ -673,7 +684,9 @@ export class MdPathCompletionProvider {
 					replacementRange,
 					path,
 				);
+
 				completionItem.filterText = "#" + completionItem.label;
+
 				completionItem.sortText = isHeaderInCurrentDocument
 					? sortTexts.localHeader
 					: sortTexts.workspaceHeader;
@@ -686,8 +699,10 @@ export class MdPathCompletionProvider {
 						entry.text,
 						path,
 					);
+
 					completionItem.labelDetails = { description: path };
 				}
+
 				yield completionItem;
 			}
 		}
@@ -793,6 +808,7 @@ export class MdPathCompletionProvider {
 
 					break;
 				}
+
 				case MediaType.Video: {
 					documentation += `\n\n${mdBuilder.video(uri, maxMediaWidth)}`;
 
@@ -834,9 +850,11 @@ export class MdPathCompletionProvider {
 		) {
 			if (looksLikeMarkdownFilePath(this.#configuration, name)) {
 				const ext = extname(name);
+
 				name = name.slice(0, -ext.length);
 			}
 		}
+
 		return name;
 	}
 

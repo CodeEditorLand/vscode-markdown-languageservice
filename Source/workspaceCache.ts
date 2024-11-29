@@ -28,6 +28,7 @@ type GetValueFn<T> = (
 export class MdDocumentInfoCache<T> extends Disposable {
 	readonly #cache = new ResourceMap<{
 		readonly value: Lazy<Promise<T>>;
+
 		readonly cts: CancellationTokenSource;
 	}>();
 
@@ -36,12 +37,14 @@ export class MdDocumentInfoCache<T> extends Disposable {
 	>();
 
 	readonly #workspace: IWorkspace;
+
 	readonly #getValue: GetValueFn<T>;
 
 	public constructor(workspace: IWorkspace, getValue: GetValueFn<T>) {
 		super();
 
 		this.#workspace = workspace;
+
 		this.#getValue = getValue;
 
 		this._register(
@@ -49,6 +52,7 @@ export class MdDocumentInfoCache<T> extends Disposable {
 				this.#invalidate(doc),
 			),
 		);
+
 		this._register(
 			this.#workspace.onDidDeleteMarkdownDocument(
 				this.#onDidDeleteDocument,
@@ -86,6 +90,7 @@ export class MdDocumentInfoCache<T> extends Disposable {
 		if (existing) {
 			return existing.value.value;
 		}
+
 		return this.#resetEntry(document).value;
 	}
 
@@ -97,7 +102,9 @@ export class MdDocumentInfoCache<T> extends Disposable {
 		}
 
 		const p = this.#workspace.openMarkdownDocument(resource);
+
 		this.#loadingDocuments.set(resource, p);
+
 		p.finally(() => {
 			this.#loadingDocuments.delete(resource);
 		});
@@ -111,6 +118,7 @@ export class MdDocumentInfoCache<T> extends Disposable {
 		const cts = new CancellationTokenSource();
 
 		const value = lazy(() => this.#getValue(document, cts.token));
+
 		this.#cache.set(getDocUri(document), { value, cts });
 
 		return value;
@@ -127,7 +135,9 @@ export class MdDocumentInfoCache<T> extends Disposable {
 
 		if (entry) {
 			entry.cts.cancel();
+
 			entry.cts.dispose();
+
 			this.#cache.delete(resource);
 		}
 	}
@@ -142,18 +152,21 @@ export class MdDocumentInfoCache<T> extends Disposable {
 export class MdWorkspaceInfoCache<T> extends Disposable {
 	readonly #cache = new ResourceMap<{
 		readonly value: Lazy<Promise<T>>;
+
 		readonly cts: CancellationTokenSource;
 	}>();
 
 	#init?: Promise<void>;
 
 	readonly #workspace: IWorkspace;
+
 	readonly #getValue: GetValueFn<T>;
 
 	public constructor(workspace: IWorkspace, getValue: GetValueFn<T>) {
 		super();
 
 		this.#workspace = workspace;
+
 		this.#getValue = getValue;
 
 		this._register(
@@ -162,12 +175,14 @@ export class MdWorkspaceInfoCache<T> extends Disposable {
 				this,
 			),
 		);
+
 		this._register(
 			this.#workspace.onDidCreateMarkdownDocument(
 				this.#onDidChangeDocument,
 				this,
 			),
 		);
+
 		this._register(
 			this.#workspace.onDidDeleteMarkdownDocument(
 				this.#onDidDeleteDocument,
@@ -210,6 +225,7 @@ export class MdWorkspaceInfoCache<T> extends Disposable {
 		if (!this.#init) {
 			this.#init = this.#populateCache();
 		}
+
 		await this.#init;
 	}
 
@@ -228,6 +244,7 @@ export class MdWorkspaceInfoCache<T> extends Disposable {
 		// TODO: cancel old request?
 
 		const cts = new CancellationTokenSource();
+
 		this.#cache.set(getDocUri(document), {
 			value: lazy(() => this.#getValue(document, cts.token)),
 			cts,
@@ -243,7 +260,9 @@ export class MdWorkspaceInfoCache<T> extends Disposable {
 
 		if (entry) {
 			entry.cts.cancel();
+
 			entry.cts.dispose();
+
 			this.#cache.delete(resource);
 		}
 	}

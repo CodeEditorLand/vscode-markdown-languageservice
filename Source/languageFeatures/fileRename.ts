@@ -26,18 +26,23 @@ import { getLinkRenameEdit, getLinkRenameText } from "./rename";
 
 export interface FileRename {
 	readonly oldUri: URI;
+
 	readonly newUri: URI;
 }
 
 export interface FileRenameResponse {
 	participatingRenames: readonly FileRename[];
+
 	edit: lsp.WorkspaceEdit;
 }
 
 export class MdFileRenameProvider {
 	readonly #config: LsConfiguration;
+
 	readonly #workspace: IWorkspace;
+
 	readonly #linkCache: MdWorkspaceInfoCache<readonly MdLink[]>;
+
 	readonly #referencesProvider: MdReferencesProvider;
 
 	public constructor(
@@ -47,8 +52,11 @@ export class MdFileRenameProvider {
 		referencesProvider: MdReferencesProvider,
 	) {
 		this.#config = config;
+
 		this.#workspace = workspace;
+
 		this.#linkCache = linkCache;
+
 		this.#referencesProvider = referencesProvider;
 	}
 
@@ -182,6 +190,7 @@ export class MdFileRenameProvider {
 							// The link still points within the directory being moved.
 							// This means we just need to normalize the path it in case it was referencing any old names.
 							const rootDir = Utils.dirname(oldDocUri);
+
 							newPathText =
 								"./" +
 								path.posix.relative(
@@ -190,6 +199,7 @@ export class MdFileRenameProvider {
 								);
 						} else {
 							const rootDir = Utils.dirname(docUri);
+
 							newPathText = path.posix.relative(
 								rootDir.path,
 								oldLink.resource.path,
@@ -203,7 +213,9 @@ export class MdFileRenameProvider {
 								link,
 								replacementPath,
 							);
+
 							builder.replace(docUri, range, newText);
+
 							didParticipate = true;
 						}
 					}
@@ -254,6 +266,7 @@ export class MdFileRenameProvider {
 				didParticipate = true;
 			}
 		}
+
 		return didParticipate;
 	}
 
@@ -356,6 +369,7 @@ export class MdFileRenameProvider {
 				}
 			}
 		}
+
 		return didParticipate;
 	}
 
@@ -384,10 +398,12 @@ export class MdFileRenameProvider {
 
 		if (typeof newLinkText === "string") {
 			const { range, newText } = getLinkRenameEdit(link, newLinkText);
+
 			builder.replace(doc, range, newText);
 
 			return true;
 		}
+
 		return false;
 	}
 }

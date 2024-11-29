@@ -23,6 +23,7 @@ export interface TocEntry {
 	readonly text: string;
 
 	readonly level: number;
+
 	readonly line: number;
 
 	/**
@@ -99,6 +100,7 @@ export class TableOfContents {
 						if (!doc || token.isCancellationRequested) {
 							return [];
 						}
+
 						return this.#buildToc(parser, doc, token);
 					}),
 				)
@@ -137,15 +139,18 @@ export class TableOfContents {
 			switch (token.type) {
 				case "heading_open": {
 					currentHeader = { open: token, body: [] };
+
 					headers.push(currentHeader);
 
 					break;
 				}
+
 				case "heading_close": {
 					currentHeader = undefined;
 
 					break;
 				}
+
 				default: {
 					currentHeader?.body.push(token);
 
@@ -204,6 +209,7 @@ export class TableOfContents {
 					break;
 				}
 			}
+
 			const endLine = end ?? document.lineCount - 1;
 
 			return {
@@ -283,14 +289,18 @@ export class MdTableOfContentsProvider extends Disposable {
 	readonly #cache: MdDocumentInfoCache<TableOfContents>;
 
 	readonly #parser: IMdParser;
+
 	readonly #workspace: IWorkspace;
+
 	readonly #logger: ILogger;
 
 	constructor(parser: IMdParser, workspace: IWorkspace, logger: ILogger) {
 		super();
 
 		this.#parser = parser;
+
 		this.#workspace = workspace;
+
 		this.#logger = logger;
 
 		this.#cache = this._register(

@@ -20,6 +20,7 @@ export class InMemoryDocument implements ITextDocument {
 	#doc: TextDocument;
 
 	public readonly $uri: URI;
+
 	public readonly uri: string;
 
 	constructor(
@@ -28,6 +29,7 @@ export class InMemoryDocument implements ITextDocument {
 		public version = 0,
 	) {
 		this.$uri = uri;
+
 		this.uri = uri.toString();
 
 		this.#doc = TextDocument.create(
@@ -75,7 +77,9 @@ export class InMemoryDocument implements ITextDocument {
 	#update(changes: lsp.TextDocumentContentChangeEvent[]) {
 		// Temp docs always share the same version
 		const newVersion = this.version < 0 ? this.version : this.version + 1;
+
 		this.version = newVersion;
+
 		TextDocument.update(this.#doc, changes, newVersion);
 	}
 }

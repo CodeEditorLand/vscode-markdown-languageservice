@@ -32,8 +32,11 @@ export enum MdReferenceKind {
  */
 export interface MdLinkReference {
 	readonly kind: MdReferenceKind.Link;
+
 	readonly isTriggerLocation: boolean;
+
 	readonly isDefinition: boolean;
+
 	readonly location: lsp.Location;
 
 	readonly link: MdLink;
@@ -46,6 +49,7 @@ export interface MdHeaderReference {
 	readonly kind: MdReferenceKind.Header;
 
 	readonly isTriggerLocation: boolean;
+
 	readonly isDefinition: boolean;
 
 	/**
@@ -77,10 +81,15 @@ export type MdReference = MdLinkReference | MdHeaderReference;
  */
 export class MdReferencesProvider extends Disposable {
 	readonly #configuration: LsConfiguration;
+
 	readonly #parser: IMdParser;
+
 	readonly #workspace: IWorkspace;
+
 	readonly #tocProvider: MdTableOfContentsProvider;
+
 	readonly #linkCache: MdWorkspaceInfoCache<readonly MdLink[]>;
+
 	readonly #logger: ILogger;
 
 	public constructor(
@@ -94,10 +103,15 @@ export class MdReferencesProvider extends Disposable {
 		super();
 
 		this.#configuration = configuration;
+
 		this.#parser = parser;
+
 		this.#workspace = workspace;
+
 		this.#tocProvider = tocProvider;
+
 		this.#linkCache = linkCache;
+
 		this.#logger = logger;
 	}
 
@@ -310,6 +324,7 @@ export class MdReferencesProvider extends Disposable {
 							sourceLink.source.hrefRange,
 							link.source.hrefRange,
 						);
+
 					references.push({
 						kind: MdReferenceKind.Link,
 						isTriggerLocation,
@@ -322,6 +337,7 @@ export class MdReferencesProvider extends Disposable {
 					});
 				}
 			}
+
 			return references;
 		}
 
@@ -387,6 +403,7 @@ export class MdReferencesProvider extends Disposable {
 							sourceLink.source.hrefRange,
 							link.source.hrefRange,
 						);
+
 					references.push({
 						kind: MdReferenceKind.Link,
 						isTriggerLocation,

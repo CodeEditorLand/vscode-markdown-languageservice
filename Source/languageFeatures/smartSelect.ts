@@ -15,7 +15,9 @@ import { isEmptyOrWhitespace } from "../util/string";
 
 export class MdSelectionRangeProvider {
 	readonly #parser: IMdParser;
+
 	readonly #tocProvider: MdTableOfContentsProvider;
+
 	readonly #logger: ILogger;
 
 	constructor(
@@ -24,7 +26,9 @@ export class MdSelectionRangeProvider {
 		logger: ILogger,
 	) {
 		this.#parser = parser;
+
 		this.#tocProvider = tocProvider;
+
 		this.#logger = logger;
 	}
 
@@ -114,6 +118,7 @@ export class MdSelectionRangeProvider {
 				currentRange,
 			);
 		}
+
 		return currentRange;
 	}
 
@@ -143,6 +148,7 @@ export class MdSelectionRangeProvider {
 				getFirstChildHeader(document, headers[i], toc.entries),
 			);
 		}
+
 		return currentRange;
 	}
 }
@@ -230,6 +236,7 @@ function getBlockTokensForPosition(
 	if (enclosingTokens.length === 0) {
 		return [];
 	}
+
 	const sortedTokens = enclosingTokens.sort(
 		(token1, token2) =>
 			token2.map[1] - token2.map[0] - (token1.map[1] - token1.map[0]),
@@ -262,6 +269,7 @@ function createBlockRange(
 	) {
 		endLine = endLine - 1;
 	}
+
 	const range = lsp.Range.create(
 		startLine,
 		0,
@@ -328,6 +336,7 @@ function createInlineRange(
 			);
 		}
 	}
+
 	const linkSelection = createLinkRange(
 		lineText,
 		cursorPosition.character,
@@ -443,6 +452,7 @@ function createBoldRange(
 
 		return cursorOnStars ? contentAndStars : content;
 	}
+
 	return undefined;
 }
 
@@ -481,6 +491,7 @@ function createOtherInlineRange(
 				lineText.indexOf(match[0]) + match[0].length >= cursorChar,
 		);
 	}
+
 	if (matches.length) {
 		// should only be one match, so select first and select group 1 for italics because that contains just the italic section
 		// doesn't include the leading and trailing characters which are guaranteed to not be * so as not to be confused with bold
@@ -514,6 +525,7 @@ function createOtherInlineRange(
 
 		return cursorOnType ? contentAndType : content;
 	}
+
 	return undefined;
 }
 
@@ -584,6 +596,7 @@ function createLinkRange(
 
 		return cursorOnType ? contentAndNearestType : content;
 	}
+
 	return undefined;
 }
 
@@ -639,6 +652,7 @@ function getFirstChildHeader(
 				: undefined;
 		}
 	}
+
 	return undefined;
 }
 

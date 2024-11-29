@@ -73,6 +73,7 @@ export function removeNewUriExtIfNeeded(
 			path: newUri.path.slice(0, newUri.path.length - editExt.length),
 		});
 	}
+
 	return newUri;
 }
 
@@ -135,6 +136,7 @@ export function resolveInternalDocumentLink(
 			}
 		} else {
 			const base = Utils.dirname(docUri);
+
 			resourceUri = Utils.joinPath(base, tempUri.path);
 		}
 	}

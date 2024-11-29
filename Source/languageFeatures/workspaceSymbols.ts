@@ -14,6 +14,7 @@ import { MdDocumentSymbolProvider } from "./documentSymbols";
 
 export class MdWorkspaceSymbolProvider extends Disposable {
 	readonly #cache: MdWorkspaceInfoCache<readonly lsp.SymbolInformation[]>;
+
 	readonly #symbolProvider: MdDocumentSymbolProvider;
 
 	constructor(
@@ -21,6 +22,7 @@ export class MdWorkspaceSymbolProvider extends Disposable {
 		symbolProvider: MdDocumentSymbolProvider,
 	) {
 		super();
+
 		this.#symbolProvider = symbolProvider;
 
 		this.#cache = this._register(
@@ -63,6 +65,7 @@ export class MdWorkspaceSymbolProvider extends Disposable {
 		if (token.isCancellationRequested) {
 			return [];
 		}
+
 		return Array.from(this.#toSymbolInformation(document.uri, docSymbols));
 	}
 

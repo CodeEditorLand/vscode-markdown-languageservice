@@ -23,6 +23,7 @@ export function isParentDir(parent: URI, maybeChild: URI): boolean {
 
 		return !relative.startsWith("..");
 	}
+
 	return false;
 }
 
@@ -45,6 +46,7 @@ export function computeRelativePath(
 		) {
 			newLink = "./" + newLink;
 		}
+
 		return newLink;
 	}
 

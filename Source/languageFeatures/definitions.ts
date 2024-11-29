@@ -19,8 +19,11 @@ import { MdWorkspaceInfoCache } from "../workspaceCache";
 
 export class MdDefinitionProvider {
 	readonly #configuration: LsConfiguration;
+
 	readonly #workspace: IWorkspace;
+
 	readonly #tocProvider: MdTableOfContentsProvider;
+
 	readonly #linkCache: MdWorkspaceInfoCache<readonly MdLink[]>;
 
 	constructor(
@@ -30,8 +33,11 @@ export class MdDefinitionProvider {
 		linkCache: MdWorkspaceInfoCache<readonly MdLink[]>,
 	) {
 		this.#configuration = configuration;
+
 		this.#workspace = workspace;
+
 		this.#tocProvider = tocProvider;
+
 		this.#linkCache = linkCache;
 	}
 
@@ -71,6 +77,7 @@ export class MdDefinitionProvider {
 			) {
 				return this.#getDefinitionOfRef(link.ref.text, docLinks);
 			}
+
 			if (rangeContains(link.source.hrefRange, position)) {
 				return this.#getDefinitionOfLink(link, docLinks, token);
 			}

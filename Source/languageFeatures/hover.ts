@@ -69,6 +69,7 @@ export class MdHoverProvider {
 					value: mdBuilder.imageLink(uri, "", maxWidth),
 				};
 			}
+
 			case MediaType.Video: {
 				return {
 					kind: "markdown",
@@ -76,6 +77,7 @@ export class MdHoverProvider {
 				};
 			}
 		}
+
 		return undefined;
 	}
 }

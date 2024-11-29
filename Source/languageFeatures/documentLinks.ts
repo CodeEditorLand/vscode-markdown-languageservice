@@ -88,6 +88,7 @@ function createMdLink(
 	} catch {
 		return undefined;
 	}
+
 	if (!linkTarget) {
 		return undefined;
 	}
@@ -141,6 +142,7 @@ function getFragmentRange(
 	if (index < 0) {
 		return undefined;
 	}
+
 	return {
 		start: translatePosition(start, { characterDelta: index + 1 }),
 		end,
@@ -260,8 +262,10 @@ class InlineRanges {
 
 			if (!ranges) {
 				ranges = [];
+
 				this.#map.set(line, ranges);
 			}
+
 			ranges.push(range);
 		}
 	}
@@ -272,6 +276,7 @@ class InlineRanges {
 		for (const range of newRanges) {
 			result.add(range);
 		}
+
 		return result;
 	}
 }
@@ -302,6 +307,7 @@ class NoLinkRanges {
 			const startOffset = match.index ?? 0;
 
 			const startPosition = document.positionAt(startOffset);
+
 			inlineRanges.add(
 				lsp.Range.create(
 					startPosition,
@@ -319,6 +325,7 @@ class NoLinkRanges {
 		 */
 		public readonly multiline: ReadonlyArray<{
 			type: string;
+
 			range: [number, number];
 		}>,
 
@@ -356,8 +363,11 @@ class NoLinkRanges {
 export type ResolvedDocumentLinkTarget =
 	| {
 			readonly kind: "file";
+
 			readonly uri: URI;
+
 			position?: lsp.Position;
+
 			fragment?: string;
 	  }
 	| { readonly kind: "folder"; readonly uri: URI }
@@ -368,10 +378,12 @@ export type ResolvedDocumentLinkTarget =
  */
 export class MdLinkComputer {
 	readonly #tokenizer: IMdParser;
+
 	readonly #workspace: IWorkspace;
 
 	constructor(tokenizer: IMdParser, workspace: IWorkspace) {
 		this.#tokenizer = tokenizer;
+
 		this.#workspace = workspace;
 	}
 
@@ -564,8 +576,11 @@ export class MdLinkComputer {
 				if (!reference) {
 					continue;
 				}
+
 				const offset = linkStartOffset + 1;
+
 				hrefStart = document.positionAt(offset);
+
 				hrefEnd = document.positionAt(offset + reference.length);
 			} else if (reference) {
 				// [text][ref]
@@ -578,6 +593,7 @@ export class MdLinkComputer {
 						continue;
 					}
 				}
+
 				if (!match[0].startsWith("!")) {
 					// Also get links in text
 					yield* this.#getReferenceLinksInText(
@@ -591,7 +607,9 @@ export class MdLinkComputer {
 				const pre = match[1];
 
 				const offset = linkStartOffset + pre.length;
+
 				hrefStart = document.positionAt(offset);
+
 				hrefEnd = document.positionAt(offset + reference.length);
 			} else if (match.groups["shorthand"]) {
 				// [ref]
@@ -602,6 +620,7 @@ export class MdLinkComputer {
 				}
 
 				const offset = linkStartOffset + 1;
+
 				hrefStart = document.positionAt(offset);
 
 				const line = getLine(document, hrefStart.line);
@@ -847,6 +866,7 @@ export class MdLinkComputer {
 
 export interface MdDocumentLinksInfo {
 	readonly links: readonly MdLink[];
+
 	readonly definitions: LinkDefinitionSet;
 }
 
@@ -857,9 +877,13 @@ export class MdLinkProvider extends Disposable {
 	readonly #linkCache: MdDocumentInfoCache<MdDocumentLinksInfo>;
 
 	readonly #linkComputer: MdLinkComputer;
+
 	readonly #config: LsConfiguration;
+
 	readonly #workspace: IWorkspace;
+
 	readonly #tocProvider: MdTableOfContentsProvider;
+
 	readonly #logger: ILogger;
 
 	constructor(
@@ -872,11 +896,15 @@ export class MdLinkProvider extends Disposable {
 		super();
 
 		this.#config = config;
+
 		this.#workspace = workspace;
+
 		this.#tocProvider = tocProvider;
+
 		this.#logger = logger;
 
 		this.#linkComputer = new MdLinkComputer(tokenizer, this.#workspace);
+
 		this.#linkCache = this._register(
 			new MdDocumentInfoCache(this.#workspace, (doc, token) =>
 				this.getLinksWithoutCaching(doc, token),
@@ -959,6 +987,7 @@ export class MdLinkProvider extends Disposable {
 				} else {
 					link.target = target.uri.toString(true);
 				}
+
 				break;
 		}
 
@@ -1028,6 +1057,7 @@ export class MdLinkProvider extends Disposable {
 				if (dotMdResource) {
 					if (await this.#workspace.stat(dotMdResource)) {
 						target = dotMdResource;
+
 						found = true;
 					}
 				}
@@ -1109,6 +1139,7 @@ export class MdLinkProvider extends Disposable {
 					target: link.href.uri.toString(true),
 				};
 			}
+
 			case HrefKind.Internal: {
 				return {
 					range: link.source.hrefRange,
@@ -1117,6 +1148,7 @@ export class MdLinkProvider extends Disposable {
 					data: link,
 				};
 			}
+
 			case HrefKind.Reference: {
 				// We only render reference links in the editor if they are actually defined.
 				// This matches how reference links are rendered by markdown-it.

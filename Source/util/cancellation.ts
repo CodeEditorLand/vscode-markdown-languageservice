@@ -9,6 +9,7 @@ export const noopToken: CancellationToken = new (class
 	implements CancellationToken
 {
 	readonly #onCancellationRequestedEmitter = new Emitter<void>();
+
 	onCancellationRequested = this.#onCancellationRequestedEmitter.event;
 
 	get isCancellationRequested() {

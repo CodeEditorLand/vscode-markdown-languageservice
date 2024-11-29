@@ -139,6 +139,7 @@ export class MdExtractLinkDefinitionCodeActionProvider {
 						link.kind === MdLinkKind.AutoLink
 							? link.source.range
 							: link.source.targetRange;
+
 					builder.replace(resource, targetRange, `[${placeholder}]`);
 				}
 			}
@@ -153,6 +154,7 @@ export class MdExtractLinkDefinitionCodeActionProvider {
 		const defEdit = createAddDefinitionEdit(doc, definitions, [
 			{ definitionText, placeholder },
 		]);
+
 		builder.insert(resource, defEdit.range.start, defEdit.newText);
 
 		const renamePosition = translatePosition(

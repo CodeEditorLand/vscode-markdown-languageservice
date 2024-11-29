@@ -5,7 +5,9 @@
 
 export interface Lazy<T> {
 	readonly value: T;
+
 	readonly hasValue: boolean;
+
 	map<R>(f: (x: T) => R): Lazy<R>;
 }
 
@@ -22,8 +24,10 @@ class LazyValue<T> implements Lazy<T> {
 	get value(): T {
 		if (!this.#hasValue) {
 			this.#hasValue = true;
+
 			this.#value = this.#getValue();
 		}
+
 		return this.#value!;
 	}
 

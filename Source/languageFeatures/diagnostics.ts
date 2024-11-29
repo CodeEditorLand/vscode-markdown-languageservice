@@ -133,6 +133,7 @@ class FileLinkMap {
 	readonly #filesToLinksMap = new ResourceMap<{
 		readonly outgoingLinks: Array<{
 			readonly source: MdLinkSource;
+
 			readonly fragment: string;
 		}>;
 	}>();
@@ -171,9 +172,13 @@ class FileLinkMap {
 
 export class DiagnosticComputer {
 	readonly #configuration: LsConfiguration;
+
 	readonly #workspace: IWorkspace;
+
 	readonly #linkProvider: MdLinkProvider;
+
 	readonly #tocProvider: MdTableOfContentsProvider;
+
 	readonly #logger: ILogger;
 
 	constructor(
@@ -184,9 +189,13 @@ export class DiagnosticComputer {
 		logger: ILogger,
 	) {
 		this.#configuration = configuration;
+
 		this.#workspace = workspace;
+
 		this.#linkProvider = linkProvider;
+
 		this.#tocProvider = tocProvider;
+
 		this.#logger = logger;
 	}
 
@@ -196,7 +205,9 @@ export class DiagnosticComputer {
 		token: lsp.CancellationToken,
 	): Promise<{
 		readonly diagnostics: lsp.Diagnostic[];
+
 		readonly links: readonly MdLink[];
+
 		readonly statCache: ResourceMap<{ readonly exists: boolean }>;
 	}> {
 		this.#logger.log(LogLevel.Debug, "DiagnosticComputer.compute", {
@@ -432,6 +443,7 @@ export class DiagnosticComputer {
 		if (typeof pathErrorSeverity === "undefined") {
 			return [];
 		}
+
 		const fragmentErrorSeverity = toSeverity(
 			typeof options.validateMarkdownFileLinkFragments === "undefined"
 				? options.validateFragmentLinks
@@ -450,6 +462,7 @@ export class DiagnosticComputer {
 		const limiter = new Limiter(10);
 
 		const diagnostics: lsp.Diagnostic[] = [];
+
 		await Promise.all(
 			Array.from(linkSet.entries()).map(
 				([path, { outgoingLinks: links }]) => {
@@ -471,6 +484,7 @@ export class DiagnosticComputer {
 
 								if (!(toc && tocLookupByLink(toc, link)) && !this.#isIgnoredLink(options, link.source.pathText) && !this.#isIgnoredLink(options, link.source.hrefText)) {
 									const range = (link.source.fragmentRange && modifyRange(link.source.fragmentRange, translatePosition(link.source.fragmentRange.start, { characterDelta: -1 }), undefined)) ?? link.source.hrefRange;
+
 									diagnostics.push({
 										code: DiagnosticCode.link_noSuchFile,
 										message: l10n.t(
@@ -539,6 +553,7 @@ export class DiagnosticComputer {
 													undefined,
 												)) ??
 											link.source.hrefRange;
+
 										diagnostics.push({
 											code: DiagnosticCode.link_noSuchHeaderInFile,
 											message: l10n.t(
@@ -592,6 +607,7 @@ export interface IPullDiagnosticsManager {
 	 */
 	readonly onLinkedToFileChanged: lsp.Event<{
 		readonly changedResource: URI;
+
 		readonly linkingResources: readonly URI[];
 	}>;
 
@@ -617,7 +633,9 @@ class FileLinkState extends Disposable {
 	readonly #onDidChangeLinkedToFile = this._register(
 		new lsp.Emitter<{
 			readonly changedResource: URI;
+
 			readonly linkingFiles: Iterable<URI>;
+
 			readonly exists: boolean;
 		}>(),
 	);
@@ -642,12 +660,14 @@ class FileLinkState extends Disposable {
 	}>();
 
 	readonly #workspace: IWorkspaceWithWatching;
+
 	readonly #logger: ILogger;
 
 	constructor(workspace: IWorkspaceWithWatching, logger: ILogger) {
 		super();
 
 		this.#workspace = workspace;
+
 		this.#logger = logger;
 	}
 
@@ -657,6 +677,7 @@ class FileLinkState extends Disposable {
 		for (const entry of this.#linkedToFile.values()) {
 			entry.watcher.dispose();
 		}
+
 		this.#linkedToFile.clear();
 	}
 
@@ -693,6 +714,7 @@ class FileLinkState extends Disposable {
 					documents: new ResourceMap(),
 					exists,
 				};
+
 				this.#linkedToFile.set(path, entry);
 			}
 
@@ -703,6 +725,7 @@ class FileLinkState extends Disposable {
 		for (const [key, value] of this.#linkedToFile) {
 			if (value.documents.size === 0) {
 				value.watcher.dispose();
+
 				this.#linkedToFile.delete(key);
 			}
 		}
@@ -718,6 +741,7 @@ class FileLinkState extends Disposable {
 		if (!entry) {
 			return undefined;
 		}
+
 		return { exists: entry.exists };
 	}
 
@@ -735,7 +759,9 @@ class FileLinkState extends Disposable {
 		return {
 			dispose: () => {
 				watcher.dispose();
+
 				deleteReg.dispose();
+
 				createReg.dispose();
 			},
 		};
@@ -752,6 +778,7 @@ class FileLinkState extends Disposable {
 
 		if (entry) {
 			entry.exists = exists;
+
 			this.#onDidChangeLinkedToFile.fire({
 				changedResource: resource,
 				linkingFiles: entry.documents.values(),
@@ -766,14 +793,17 @@ export class DiagnosticsManager
 	implements IPullDiagnosticsManager
 {
 	readonly #computer: DiagnosticComputer;
+
 	readonly #linkWatcher: FileLinkState;
 
 	readonly #onLinkedToFileChanged = this._register(
 		new lsp.Emitter<{
 			readonly changedResource: URI;
+
 			readonly linkingResources: readonly URI[];
 		}>(),
 	);
+
 	public readonly onLinkedToFileChanged = this.#onLinkedToFileChanged.event;
 
 	constructor(
@@ -786,6 +816,7 @@ export class DiagnosticsManager
 		super();
 
 		const linkWatcher = new FileLinkState(workspace, logger);
+
 		this.#linkWatcher = this._register(linkWatcher);
 
 		this._register(
@@ -826,6 +857,7 @@ export class DiagnosticsManager
 							return undefined;
 						}
 					}
+
 					return workspace.stat.call(
 						this === receiver ? target : this,
 						resource,

@@ -5,6 +5,7 @@
 
 export interface ISlug {
 	readonly value: string;
+
 	equals(other: ISlug): boolean;
 }
 

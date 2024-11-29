@@ -5,7 +5,9 @@
 
 interface ILimitedTaskFactory<T> {
 	factory: ITask<Promise<T>>;
+
 	c: (value: T | Promise<T>) => void;
+
 	e: (error?: unknown) => void;
 }
 
@@ -22,12 +24,16 @@ interface ITask<T> {
 export class Limiter<T> {
 	#size = 0;
 	#runningPromises: number;
+
 	readonly #maxDegreeOfParalellism: number;
+
 	readonly #outstandingPromises: ILimitedTaskFactory<T>[];
 
 	constructor(maxDegreeOfParalellism: number) {
 		this.#maxDegreeOfParalellism = maxDegreeOfParalellism;
+
 		this.#outstandingPromises = [];
+
 		this.#runningPromises = 0;
 	}
 
@@ -40,6 +46,7 @@ export class Limiter<T> {
 
 		return new Promise<T>((c, e) => {
 			this.#outstandingPromises.push({ factory, c, e });
+
 			this.#consume();
 		});
 	}
@@ -50,10 +57,13 @@ export class Limiter<T> {
 			this.#runningPromises < this.#maxDegreeOfParalellism
 		) {
 			const iLimitedTask = this.#outstandingPromises.shift()!;
+
 			this.#runningPromises++;
 
 			const promise = iLimitedTask.factory();
+
 			promise.then(iLimitedTask.c, iLimitedTask.e);
+
 			promise.then(
 				() => this.#consumed(),
 				() => this.#consumed(),
@@ -63,6 +73,7 @@ export class Limiter<T> {
 
 	#consumed(): void {
 		this.#size--;
+
 		this.#runningPromises--;
 
 		if (this.#outstandingPromises.length > 0) {

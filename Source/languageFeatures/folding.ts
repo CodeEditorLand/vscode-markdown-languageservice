@@ -15,12 +15,15 @@ const rangeLimit = 5000;
 
 interface RegionMarker {
 	readonly token: TokenWithMap;
+
 	readonly isStart: boolean;
 }
 
 export class MdFoldingProvider {
 	readonly #parser: IMdParser;
+
 	readonly #tocProvider: MdTableOfContentsProvider;
+
 	readonly #logger: ILogger;
 
 	constructor(
@@ -29,7 +32,9 @@ export class MdFoldingProvider {
 		logger: ILogger,
 	) {
 		this.#parser = parser;
+
 		this.#tocProvider = tocProvider;
+
 		this.#logger = logger;
 	}
 
@@ -115,6 +120,7 @@ export class MdFoldingProvider {
 			) {
 				endLine = endLine - 1;
 			}
+
 			return { startLine: entry.line, endLine };
 		});
 	}
@@ -128,6 +134,7 @@ export class MdFoldingProvider {
 		if (token.isCancellationRequested) {
 			return [];
 		}
+
 		return Array.from(
 			this.#getBlockFoldingRangesFromTokens(document, tokens),
 		);
@@ -208,6 +215,7 @@ function isFoldableToken(token: Token): token is TokenWithMap {
 			if (asRegionMarker(token)) {
 				return false;
 			}
+
 			return token.map[1] > token.map[0] + 1;
 
 		default:

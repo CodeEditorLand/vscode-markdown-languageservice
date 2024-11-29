@@ -45,10 +45,12 @@ class PasteLinksCopyMetadata {
 
 export class MdUpdatePastedLinksProvider {
 	readonly #config: LsConfiguration;
+
 	readonly #linkProvider: MdLinkProvider;
 
 	constructor(config: LsConfiguration, linkProvider: MdLinkProvider) {
 		this.#config = config;
+
 		this.#linkProvider = linkProvider;
 	}
 
@@ -110,6 +112,7 @@ export class MdUpdatePastedLinksProvider {
 			targetDocument.getText(),
 			tempDocVersion,
 		);
+
 		editedDoc.replaceContents(editedDoc.previewEdits(sortedPastes));
 
 		const allLinks = await this.#linkProvider.getLinksWithoutCaching(
@@ -133,6 +136,7 @@ export class MdUpdatePastedLinksProvider {
 				if (link.href.kind === HrefKind.Reference) {
 					return true;
 				}
+
 				return (
 					link.href.kind === HrefKind.Internal &&
 					!link.source.hrefText.startsWith("/") && // No need to rewrite absolute paths
@@ -238,10 +242,12 @@ export class MdUpdatePastedLinksProvider {
 				let edit: lsp.TextEdit | undefined;
 				(edit = rewriteLinksEdits[0]) &&
 				isBefore(edit.range.start, pasteRange.start);
+
 				rewriteLinksEdits.shift()
 			) {
 				offsetAdjustment += computeEditLengthChange(edit, editedDoc);
 			}
+
 			const startOffset =
 				editedDoc.offsetAt(pasteRange.start) + offsetAdjustment;
 
@@ -249,10 +255,12 @@ export class MdUpdatePastedLinksProvider {
 				let edit: lsp.TextEdit | undefined;
 				(edit = rewriteLinksEdits[0]) &&
 				isBeforeOrEqual(edit.range.end, pasteRange.end);
+
 				rewriteLinksEdits.shift()
 			) {
 				offsetAdjustment += computeEditLengthChange(edit, editedDoc);
 			}
+
 			const endOffset =
 				editedDoc.offsetAt(pasteRange.end) + offsetAdjustment;
 
@@ -260,6 +268,7 @@ export class MdUpdatePastedLinksProvider {
 				finalDoc.positionAt(startOffset),
 				finalDoc.positionAt(endOffset),
 			);
+
 			outEdits.push(
 				lsp.TextEdit.replace(
 					originalPaste.range,
@@ -276,6 +285,7 @@ export class MdUpdatePastedLinksProvider {
 			if (token.isCancellationRequested) {
 				return;
 			}
+
 			outEdits.push(
 				createAddDefinitionEdit(
 					targetDocument,

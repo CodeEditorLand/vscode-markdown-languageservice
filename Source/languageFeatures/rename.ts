@@ -46,6 +46,7 @@ import {
 
 export interface MdReferencesResponse {
 	readonly references: readonly MdReference[];
+
 	readonly triggerRef: MdReference;
 }
 
@@ -66,19 +67,29 @@ export class MdRenameProvider {
 	#cachedRefs?:
 		| {
 				readonly resource: URI;
+
 				readonly version: number;
+
 				readonly position: lsp.Position;
+
 				readonly triggerRef: MdReference;
+
 				readonly references: MdReference[];
 		  }
 		| undefined;
 
 	readonly #configuration: LsConfiguration;
+
 	readonly #workspace: IWorkspace;
+
 	readonly #parser: IMdParser;
+
 	readonly #referencesProvider: MdReferencesProvider;
+
 	readonly #tableOfContentProvider: MdTableOfContentsProvider;
+
 	readonly #slugifier: ISlugifier;
+
 	readonly #logger: ILogger;
 
 	public constructor(
@@ -91,11 +102,17 @@ export class MdRenameProvider {
 		logger: ILogger,
 	) {
 		this.#configuration = configuration;
+
 		this.#workspace = workspace;
+
 		this.#parser = parser;
+
 		this.#referencesProvider = referencesProvider;
+
 		this.#tableOfContentProvider = tableOfContentProvider;
+
 		this.#slugifier = slugifier;
+
 		this.#logger = logger;
 	}
 
@@ -132,6 +149,7 @@ export class MdRenameProvider {
 					placeholder: triggerRef.headerText,
 				};
 			}
+
 			case MdReferenceKind.Link: {
 				if (triggerRef.link.kind === MdLinkKind.Definition) {
 					// We may have been triggered on the ref or the definition itself
@@ -173,6 +191,7 @@ export class MdRenameProvider {
 				if (!range) {
 					throw new RenameNotSupportedAtLocationError();
 				}
+
 				return {
 					range,
 					placeholder: tryDecodeUri(document.getText(range)),
@@ -319,6 +338,7 @@ export class MdRenameProvider {
 					rawNewFilePath,
 					newName,
 				);
+
 				builder.replace(ref.link.source.resource, range, newText);
 			}
 		}
@@ -404,6 +424,7 @@ export class MdRenameProvider {
 				}
 
 				const changedHeaders: TocEntry[] = [];
+
 				oldToc.entries.forEach((oldEntry, index) => {
 					const newEntry = newToc.entries[index];
 
@@ -473,6 +494,7 @@ export class MdRenameProvider {
 					break;
 			}
 		}
+
 		return builder.getEdit();
 	}
 
@@ -491,6 +513,7 @@ export class MdRenameProvider {
 				);
 			}
 		}
+
 		return builder.getEdit();
 	}
 
@@ -599,6 +622,7 @@ export function getFilePathRange(link: MdLink): lsp.Range {
 			}),
 		);
 	}
+
 	return link.source.hrefRange;
 }
 
@@ -606,6 +630,7 @@ function newPathWithFragmentIfNeeded(newPath: string, link: MdLink): string {
 	if (link.href.kind === HrefKind.Internal && link.href.fragment) {
 		return newPath + "#" + link.href.fragment;
 	}
+
 	return newPath;
 }
 

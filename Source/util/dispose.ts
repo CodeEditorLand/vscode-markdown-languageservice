@@ -42,7 +42,9 @@ export abstract class Disposable {
 		if (this.#isDisposed) {
 			return;
 		}
+
 		this.#isDisposed = true;
+
 		disposeAll(this._disposables);
 	}
 
@@ -52,6 +54,7 @@ export abstract class Disposable {
 		} else {
 			this._disposables.push(value);
 		}
+
 		return value;
 	}
 

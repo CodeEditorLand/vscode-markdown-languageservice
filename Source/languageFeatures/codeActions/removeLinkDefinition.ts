@@ -17,6 +17,7 @@ export class MdRemoveLinkDefinitionCodeActionProvider {
 	static readonly #removeUnusedDefTitle = l10n.t(
 		"Remove unused link definition",
 	);
+
 	static readonly #removeDuplicateDefTitle = l10n.t(
 		"Remove duplicate link definition",
 	);
@@ -46,6 +47,7 @@ export class MdRemoveLinkDefinitionCodeActionProvider {
 					MdRemoveLinkDefinitionCodeActionProvider
 						.#removeUnusedDefTitle,
 				);
+
 				unusedDiagnosticLines.add(link.source.range.start.line);
 			}
 		}
@@ -88,6 +90,7 @@ export class MdRemoveLinkDefinitionCodeActionProvider {
 		const builder = new WorkspaceEditBuilder();
 
 		const range = definition.source.range;
+
 		builder.replace(
 			getDocUri(doc),
 			lsp.Range.create(range.start.line, 0, range.start.line + 1, 0),
