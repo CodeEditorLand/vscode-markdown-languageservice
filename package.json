@@ -19,7 +19,7 @@
 		"types/vscode-markdown-languageservice.d.ts"
 	],
 	"main": "./out/index.js",
-	"name": "vscode-markdown-languageservice",
+	"name": "@codeeditorland/markdown-languageservice",
 	"scripts": {
 		"api-extractor": "mkdirp etc && npx api-extractor run --local",
 		"compile": "tsc -b tsconfig.json",
