@@ -242,7 +242,6 @@ export class MdUpdatePastedLinksProvider {
 				let edit: lsp.TextEdit | undefined;
 				(edit = rewriteLinksEdits[0]) &&
 				isBefore(edit.range.start, pasteRange.start);
-
 				rewriteLinksEdits.shift()
 			) {
 				offsetAdjustment += computeEditLengthChange(edit, editedDoc);
@@ -255,7 +254,6 @@ export class MdUpdatePastedLinksProvider {
 				let edit: lsp.TextEdit | undefined;
 				(edit = rewriteLinksEdits[0]) &&
 				isBeforeOrEqual(edit.range.end, pasteRange.end);
-
 				rewriteLinksEdits.shift()
 			) {
 				offsetAdjustment += computeEditLengthChange(edit, editedDoc);
