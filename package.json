@@ -14,7 +14,7 @@
 		"prepublishOnly": "npm run compile && npm run api-extractor"
 	},
 	"dependencies": {
-		"node-html-parser": "6.1.13",
+		"node-html-parser": "7.0.1",
 		"picomatch": "4.0.2"
 	},
 	"devDependencies": {
