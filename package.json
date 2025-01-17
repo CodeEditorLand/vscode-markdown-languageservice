@@ -20,7 +20,7 @@
 	"devDependencies": {
 		"@types/markdown-it": "14.1.2",
 		"@types/node": "22.x",
-		"@types/picomatch": "3.0.1",
+		"@types/picomatch": "3.0.2",
 		"github-slugger": "2.0.0",
 		"markdown-it": "14.1.0",
 		"mkdirp": "3.0.1",
